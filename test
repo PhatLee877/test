@@ -42,12 +42,13 @@ local targetNames = {
     {name = "La Supreme Combinasion", priority = 8},
     {name = "Ketupat Kepat", priority = 9},
     {name = "Esok Sekolah", priority = 10},
-    {name = " Los Bros", priority = 11},
-    {name = " Los Hotspotsitos", priority = 12},
-    {name = " Nuclearo Dinossauro", priority = 13},
-    {name = " La Grande Combinasion", priority = 14},
-    {name = " Los Combinasionas", priority = 15},
-    {name = " Tacorita Bicicleta", priority = 14},
+    {name = "Los Bros", priority = 11},
+    {name = "Los Hotspotsitos", priority = 12},
+    {name = "Nuclearo Dinossauro", priority = 13},
+    {name = "La Grande Combinasion", priority = 14},
+    {name = "Los Combinasionas", priority = 15},
+    {name = "Tacorita Bicicleta", priority = 16},
+    {name = "67", priority = 17},
 }
 
 local function getPriority(name)
