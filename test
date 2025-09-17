@@ -28,7 +28,7 @@ local function parsePrice(priceText)
     end
 end
 
-local PRICE_LIMIT = 5_000_000 -- 5M
+local PRICE_LIMIT = 200_000 -- 5M
 
 -- ====== Target Names có ưu tiên ======
 local targetNames = {
@@ -42,6 +42,7 @@ local targetNames = {
     {name = "Los Combinasionas", priority = 8},
     {name = "Nuclearo Dinossauro", priority = 9},
     {name = "La Extinct Grande", priority = 10},
+    {name = " Blackhole Goat", prioriry = 11},
 }
 
 local function getPriority(name)
