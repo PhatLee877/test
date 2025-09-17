@@ -28,7 +28,7 @@ local function parsePrice(priceText)
     end
 end
 
-local PRICE_LIMIT = 1 -- 5M
+local PRICE_LIMIT = 10_000_000 -- 5M
 
 -- ====== Target Names có ưu tiên ======
 local targetNames = {
