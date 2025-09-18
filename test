@@ -12,7 +12,7 @@ local player = Players.LocalPlayer
 local localPlayer = player
 
 -- ====== Webhook ======
-local WEBHOOK = "https://discord.com/api/webhooks/1410618012708634777/hQoWuMzJJgV5MlCK4KB0MyAJtUUj2jFOgxgNvG4tQFv3AdfJ_ByQkGNkt3G1ywfOTpIB"
+local WEBHOOK = "https://discord.com/api/webhooks/1410618016487444490/5Z5XqXUsfd7lFbxgXcCMMQqJDU_iGPc-h0AjLA09mqz-DRaIYpKP7aMVQhM6lm9oIgTv"
 
 -- ====== Hàm đổi "5K"/"5M"/"2B" sang số ======
 local function parsePrice(priceText)
