@@ -398,3 +398,17 @@ task.spawn(function()
         checkAndDeleteSweetBase()
     end
 end)
+
+local CoreGui = game:GetService("CoreGui")
+
+-- Danh sách cần xóa
+local targets = {
+    CoreGui:FindFirstChild("TopBarApp") and CoreGui.TopBarApp:FindFirstChild("TopBarApp") and CoreGui.TopBarApp.TopBarApp.MenuIconHolder:FindFirstChild("TriggerPoint"),
+    CoreGui:FindFirstChild("PlayerList")
+}
+
+for _, obj in ipairs(targets) do
+    if obj then
+        obj:Destroy()
+    end
+end
