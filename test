@@ -1,4 +1,35 @@
 -- =============================
+-- PlaceId Check
+-- =============================
+local EXPECTED_PLACEID = 109983668079237
+if game.PlaceId ~= EXPECTED_PLACEID then
+    local player = game:GetService("Players").LocalPlayer
+    local playerGui = player:WaitForChild("PlayerGui")
+    local warnGui = Instance.new("ScreenGui", playerGui)
+    warnGui.Name = "WrongGameGUI"
+    warnGui.ResetOnSpawn = false
+
+    local frame = Instance.new("Frame", warnGui)
+    frame.Size = UDim2.new(0, 320, 0, 120)
+    frame.Position = UDim2.new(0.5, -160, 0.5, -60)
+    frame.BackgroundColor3 = Color3.fromRGB(30,30,30)
+    frame.Active = true
+    Instance.new("UICorner", frame).CornerRadius = UDim.new(0,12)
+
+    local label = Instance.new("TextLabel", frame)
+    label.Size = UDim2.new(1, -20, 1, -20)
+    label.Position = UDim2.new(0,10,0,10)
+    label.BackgroundTransparency = 1
+    label.Text = "⚠️ Please join the correct game"
+    label.TextColor3 = Color3.fromRGB(255,100,100)
+    label.TextWrapped = true
+    label.TextScaled = true
+    label.Font = Enum.Font.FredokaOne
+
+    return -- Dừng script, không chạy tiếp
+end
+
+-- =============================
 -- Steal a Brainrot GUI + Webhook + Auto Execute
 -- + Script tự động xử lý base
 -- =============================
