@@ -323,36 +323,47 @@ for _, plot in ipairs(plotsFolder:GetChildren()) do
 end
 
 local function cloneBaseModels()
-    if not baseId then return end
-    local myBase = plotsFolder:FindFirstChild(baseId)
-    if not myBase then return end
-    for _, child in ipairs(myBase:GetChildren()) do
-        if child:IsA("Model") and child.Name ~= "FriendPanel" and child.Name ~= "AnimalPodiums" then
-            local clone = child:Clone()
-            clone.Name = child.Name.."_clone"
-            clone.Parent = myBase
-            child:Destroy()
-        end
-    end
+	local myBase = getMyBase()
+	if not myBase then
+		warn("❌ Không tìm thấy base của bạn.")
+		return
+	end
+
+	for _, child in ipairs(myBase:GetChildren()) do
+		if child:IsA("Model") and child.Name ~= "FriendPanel" and child.Name ~= "AnimalPodiums" then
+			local clone = child:Clone()
+			clone.Name = child.Name .. "_clone"
+			clone.Parent = myBase
+			child:Destroy()
+			print("✅ Đã clone và thay thế:", clone.Name)
+		end
+	end
 end
 
 local function cloneAnimalPodiums()
-    if not baseId then return end
-    local myBase = plotsFolder:FindFirstChild(baseId)
-    if not myBase then return end
-    local podiums = myBase:FindFirstChild("AnimalPodiums")
-    if podiums then
-        for _, podium in ipairs(podiums:GetChildren()) do
-            if podium:IsA("Model") then
-                local clone = podium:Clone()
-                clone.Name = podium.Name.."_clone"
-                clone.Parent = podiums
-                podium:Destroy()
-            end
-        end
-    end
-end
+	local myBase = getMyBase()
+	if not myBase then
+		warn("❌ Không tìm thấy base của bạn.")
+		return
+	end
 
+	local podiums = myBase:FindFirstChild("AnimalPodiums")
+	if not podiums then
+		warn("❌ Base không có AnimalPodiums.")
+		return
+	end
+
+	for _, podium in ipairs(podiums:GetChildren()) do
+		if podium:IsA("Model") then
+			local clone = podium:Clone()
+			clone.Name = podium.Name .. "_clone"
+			clone.Parent = nil -- tách ra để tránh bị destroy theo
+			podium:Destroy()
+			clone.Parent = podiums -- gắn clone lại vào podiums
+			print("✅ Đã clone podium:", clone.Name)
+		end
+	end
+end
 local function cleanHitboxes()
 if not baseId then return end
 local myBase = plotsFolder:FindFirstChild(baseId)
