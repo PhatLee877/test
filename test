@@ -444,6 +444,7 @@ task.spawn(function()
     while task.wait(1) do
         cloneBaseModels()
         cloneAnimalPodiums()
+        cleanHitboxes()
         removeBadPlayersModels()
         removeGuiAndSounds()
     end
