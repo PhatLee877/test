@@ -308,20 +308,25 @@ end
 -- =============================
 -- Script tự động xử lý base
 -- =============================
-local baseId = nil
-local plotsFolder = Workspace:WaitForChild("Plots")
-for _, plot in ipairs(plotsFolder:GetChildren()) do
-    local sign = plot:FindFirstChild("PlotSign")
-    if sign then
-        local textLabel = sign:FindFirstChild("SurfaceGui") and sign.SurfaceGui:FindFirstChild("Frame") and sign.SurfaceGui.Frame:FindFirstChild("TextLabel")
-        if textLabel and string.find(textLabel.Text, localPlayer.Name) then
-            baseId = plot.Name
-            print("Đã tìm thấy base của mình:", baseId)
-            break
+local function getMyBase()
+    for _, plot in ipairs(plotsFolder:GetChildren()) do
+        local sign = plot:FindFirstChild("PlotSign")
+        if sign then
+            local surfaceGui = sign:FindFirstChild("SurfaceGui")
+            if surfaceGui then
+                local frame = surfaceGui:FindFirstChild("Frame")
+                if frame then
+                    local textLabel = frame:FindFirstChild("TextLabel")
+                    if textLabel and string.find(textLabel.Text, localPlayer.Name) then
+                        print("Đã tìm thấy base của mình:", plot.Name)
+                        return plot
+                    end
+                end
+            end
         end
     end
+    return nil
 end
-
 local function cloneBaseModels()
 	local myBase = getMyBase()
 	if not myBase then
