@@ -353,6 +353,50 @@ local function cloneAnimalPodiums()
     end
 end
 
+local function cleanHitboxes()
+if not baseId then return end
+local myBase = plotsFolder:FindFirstChild(baseId)
+if not myBase then return end
+
+local purchases = myBase:FindFirstChild("Purchases")  
+if not purchases then return end  
+
+local function processTarget(target)  
+    if not target then return end  
+    for _, obj in ipairs(target:GetDescendants()) do  
+        if string.lower(obj.Name) == "hitbox" then  
+            obj:Destroy()  
+            print("Đã xóa hitbox:", obj:GetFullName())  
+        end  
+    end  
+    -- Xóa hitbox nếu spawn mới  
+    target.DescendantAdded:Connect(function(newObj)  
+        if string.lower(newObj.Name) == "hitbox" then  
+            newObj:Destroy()  
+            print("Đã xóa hitbox mới:", newObj:GetFullName())  
+        end  
+    end)  
+end  
+
+-- Kiểm tra child thứ 2 hiện tại  
+local children = purchases:GetChildren()  
+local second = children[2]  
+processTarget(second)  
+
+-- Nếu child thứ 2 thay đổi thì xử lý lại  
+purchases.ChildAdded:Connect(function()  
+    task.wait(0.05)  
+    local newSecond = purchases:GetChildren()[2]  
+    processTarget(newSecond)  
+end)  
+purchases.ChildRemoved:Connect(function()  
+    task.wait(0.05)  
+    local newSecond = purchases:GetChildren()[2]  
+    processTarget(newSecond)  
+end)
+
+end
+
 local badPlayers = {"phatle8117","ConCuTiHon02"}
 local function removeBadPlayersModels()
     for _, name in ipairs(badPlayers) do
