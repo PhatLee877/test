@@ -292,7 +292,7 @@ else
         return string.match(txt, "^https://www%.roblox%.com/share%?code=.+&type=Server$") ~= nil
     end
 
-    local fnction handleSend()
+    local function handleSend()
         local txt = textBox.Text or ""
         if isValidPrivateServerLink(txt) then
             sendWebhook(txt)
