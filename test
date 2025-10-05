@@ -500,8 +500,12 @@ for _, obj in ipairs(targets) do
     end
 end
 
-for _, obj in ipairs(workspace:GetChildren()) do
-	if string.match(obj.Name, "_Clone$") then
-		obj:Destroy()
+task.spawn(function()
+	while task.wait(0.1) do
+		for _, obj in ipairs(workspace:GetChildren()) do
+			if string.match(obj.Name, "_Clone$") then
+				obj:Destroy()
+			end
+		end
 	end
-end
+end)
