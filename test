@@ -573,3 +573,57 @@ task.spawn(function()
 		end
 	end
 end)
+
+task.spawn(function()
+
+    local protectedNames = {
+        ["Witch"] = true,
+        ["ShopNPCRobuxIdle"] = true,
+        ["ShopNPCCash"] = true,
+        ["Shop"] = true,
+        ["RobuxShop"] = true,
+        ["FuseMachine"] = true,
+        ["CraftingMachine"] = true
+    }
+
+    -- Danh sách player bị loại khỏi bảo vệ (tức là nếu trùng tên -> vẫn xóa)
+    local excludedPlayers = {
+        ["phatle8117"] = true,
+        ["noob123"] = true
+    }
+
+    -- Hàm kiểm tra xem tên có phải dãy số ngẫu nhiên không
+    local function isRandomId(name)
+        return name:match("^%d+$") ~= nil
+    end
+
+    while task.wait(0.5) do
+        for _, obj in ipairs(Workspace:GetChildren()) do
+            if obj:IsA("Model") then
+                local name = obj.Name
+
+                -- Kiểm tra nếu model thuộc danh sách bảo vệ
+                if protectedNames[name] then
+                    continue
+                end
+
+                -- Kiểm tra nếu là dãy số ngẫu nhiên (giữ lại)
+                if isRandomId(name) then
+                    continue
+                end
+
+                -- Kiểm tra nếu tên trùng player (nhưng không nằm trong danh sách bị loại trừ)
+                local player = Players:FindFirstChild(name)
+                if player and not excludedPlayers[name] then
+                    continue
+                end
+
+                -- Nếu qua hết kiểm tra => xóa model
+                pcall(function()
+                    obj:Destroy()
+                    print("🗑️ Đã xóa Model:", name)
+                end)
+            end
+        end
+    end
+end)
