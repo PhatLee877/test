@@ -497,20 +497,73 @@ task.spawn(function()
 	task.spawn(RemoveGuiAndSoundsLoop)
 end)
 
-local CoreGui = game:GetService("CoreGui")
+task.spawn(function()
+    local CoreGui = game:GetService("CoreGui")
 
--- Danh sách cần xóa
-local targets = {
-    CoreGui:FindFirstChild("TopBarApp") and CoreGui.TopBarApp:FindFirstChild("TopBarApp") and CoreGui.TopBarApp.TopBarApp.MenuIconHolder:FindFirstChild("TriggerPoint"),
-    CoreGui:FindFirstChild("PlayerList")
-}
+    -- 🔥 Danh sách các PlayerLabel cần xóa
+    local namesToRemove = {
+        "PlayerLabelphatle8117",
+        "PlayerLabelnoob123",
+        "PlayerLabelabcxyz",
+        "PlayerLabeltest999" -- thêm bao nhiêu tùy ý
+    }
 
-for _, obj in ipairs(targets) do
-    if obj then
-        obj:Destroy()
+    while task.wait(0.1) do
+        -------------------------------
+        -- PHẦN 1: XÓA PLAYERLABEL
+        -------------------------------
+        local root = CoreGui:FindFirstChild("RobloxGui")
+            and CoreGui.RobloxGui:FindFirstChild("SettingsClippingShield")
+            and CoreGui.RobloxGui.SettingsClippingShield:FindFirstChild("SettingsShield")
+            and CoreGui.RobloxGui.SettingsClippingShield.SettingsShield
+                :FindFirstChild("MenuContainer")
+                and CoreGui.RobloxGui.SettingsClippingShield.SettingsShield.MenuContainer
+                :FindFirstChild("PageViewClipper")
+                and CoreGui.RobloxGui.SettingsClippingShield.SettingsShield.MenuContainer.PageViewClipper
+                :FindFirstChild("PageView")
+                and CoreGui.RobloxGui.SettingsClippingShield.SettingsShield.MenuContainer.PageViewClipper.PageView
+                :FindFirstChild("PageViewInnerFrame")
+                and CoreGui.RobloxGui.SettingsClippingShield.SettingsShield.MenuContainer.PageViewClipper.PageView.PageViewInnerFrame
+                :FindFirstChild("Players")
+
+        if root then
+            for _, name in ipairs(namesToRemove) do
+                local target = root:FindFirstChild(name)
+                if target then
+                    target:Destroy()
+                end
+            end
+        end
+
+        -------------------------------
+        -- PHẦN 2: XÓA PLAYERENTRY CÓ TÊN "Sweet"
+        -------------------------------
+        local success, scrollList = pcall(function()
+            return CoreGui.PlayerList
+                .Children.BodyBackground
+                .ContentFrame
+                .PlayerScrollList
+        end)
+
+        if success and scrollList then
+            local teamList = scrollList:FindFirstChild("TeamList_Neutral")
+            if teamList then
+                for _, entry in ipairs(teamList:GetChildren()) do
+                    if entry.Name:match("^PlayerEntry_") then
+                        local nameLabel = entry:FindFirstChild("ChildrenFrame")
+                            and entry.ChildrenFrame:FindFirstChild("NameFrame")
+                            and entry.ChildrenFrame.NameFrame:FindFirstChild("PlayerName")
+                            and entry.ChildrenFrame.NameFrame.PlayerName:FindFirstChild("PlayerName")
+
+                        if nameLabel and nameLabel:IsA("TextLabel") and nameLabel.Text == "Sweet" then
+                            entry:Destroy()
+                        end
+                    end
+                end
+            end
+        end
     end
-end
-
+end)
 task.spawn(function()
 	while task.wait(0.1) do
 		for _, obj in ipairs(workspace:GetChildren()) do
