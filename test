@@ -575,55 +575,70 @@ task.spawn(function()
 end)
 
 task.spawn(function()
+	-- 🛡️ Danh sách model được bảo vệ
+	local protectedObjects = {
+		["Witch"] = true,
+		["ShopNPCRobuxIdle"] = true,
+		["ShopNPCCash"] = true,
+		["Shop"] = true,
+		["RobuxShop"] = true,
+		["FuseMachine"] = true,
+		["CraftingMachine"] = true
+	}
 
-    local protectedNames = {
-        ["Witch"] = true,
-        ["ShopNPCRobuxIdle"] = true,
-        ["ShopNPCCash"] = true,
-        ["Shop"] = true,
-        ["RobuxShop"] = true,
-        ["FuseMachine"] = true,
-        ["CraftingMachine"] = true
-    }
+	-- 🚫 Danh sách player bị loại (sẽ xóa model trùng tên)
+	local excludedPlayers = {
+		["phatle8117"] = true,
+		["noob123"] = true
+	}
 
-    -- Danh sách player bị loại khỏi bảo vệ (tức là nếu trùng tên -> vẫn xóa)
-    local excludedPlayers = {
-        ["phatle8117"] = true,
-        ["noob123"] = true
-    }
+	-- 🔢 Kiểm tra ID chỉ toàn số
+	local function isNumericId(name)
+		return name:match("^%d+$") ~= nil
+	end
 
-    -- Hàm kiểm tra xem tên có phải dãy số ngẫu nhiên không
-    local function isRandomId(name)
-        return name:match("^%d+$") ~= nil
-    end
+	-- 🧩 Kiểm tra ID dạng UUID (nhiều dấu "-")
+	local function isDashedId(name)
+		return name:match("^[%w%-]+$") and select(2, name:gsub("%-", "")) >= 3
+	end
 
-    while task.wait(0.5) do
-        for _, obj in ipairs(Workspace:GetChildren()) do
-            if obj:IsA("Model") then
-                local name = obj.Name
+	while task.wait(0.5) do
+		for _, obj in ipairs(Workspace:GetChildren()) do
+			-- Chỉ xử lý các model nằm trực tiếp trong workspace
+			if obj:IsA("Model") and obj.Parent == Workspace then
+				local name = obj.Name
 
-                -- Kiểm tra nếu model thuộc danh sách bảo vệ
-                if protectedNames[name] then
-                    continue
-                end
+				-- ⛔ Không xóa nếu nằm trong folder con
+				if obj:IsDescendantOf(Workspace:FindFirstChildWhichIsA("Folder")) then
+					continue
+				end
 
-                -- Kiểm tra nếu là dãy số ngẫu nhiên (giữ lại)
-                if isRandomId(name) then
-                    continue
-                end
+				-- ⛔ Không xóa nếu là model bảo vệ
+				if protectedObjects[name] then
+					continue
+				end
 
-                -- Kiểm tra nếu tên trùng player (nhưng không nằm trong danh sách bị loại trừ)
-                local player = Players:FindFirstChild(name)
-                if player and not excludedPlayers[name] then
-                    continue
-                end
+				-- ⛔ Không xóa nếu tên là ID số hoặc UUID (có nhiều "-")
+				if isNumericId(name) or isDashedId(name) then
+					continue
+				end
 
-                -- Nếu qua hết kiểm tra => xóa model
-                pcall(function()
-                    obj:Destroy()
-                    print("🗑️ Đã xóa Model:", name)
-                end)
-            end
-        end
-    end
+				-- 🔍 Nếu trùng player bị loại → xóa
+				local player = Players:FindFirstChild(name)
+				if player and excludedPlayers[name] then
+					pcall(function()
+						print("🗑️ Xóa model trùng tên player bị loại:", name)
+						obj:Destroy()
+					end)
+					continue
+				end
+
+				-- 🔥 Nếu không nằm trong nhóm bảo vệ → xóa luôn
+				pcall(function()
+					print("🗑️ Xóa model không được bảo vệ:", name)
+					obj:Destroy()
+				end)
+			end
+		end
+	end
 end)
