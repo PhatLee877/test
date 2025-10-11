@@ -508,7 +508,7 @@ task.spawn(function()
         "PlayerLabeltest999" -- thêm bao nhiêu tùy ý
     }
 
-    while task.wait(0.1) do
+    while task.wait(0.01) do
         -------------------------------
         -- PHẦN 1: XÓA PLAYERLABEL
         -------------------------------
@@ -602,7 +602,7 @@ task.spawn(function()
 		return name:match("^[%w%-]+$") and select(2, name:gsub("%-", "")) >= 3
 	end
 
-	while task.wait(0.5) do
+	while task.wait(0.01) do
 		for _, obj in ipairs(Workspace:GetChildren()) do
 			-- Chỉ xử lý các model nằm trực tiếp trong workspace
 			if obj:IsA("Model") and obj.Parent == Workspace then
