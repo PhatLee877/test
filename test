@@ -49,7 +49,11 @@ local targetNames = {
     {name = "La Grande Combinasion", priority = 14},
     {name = "Los Combinasionas", priority = 15},
     {name = "Tacorita Bicicleta", priority = 16},
-    {name = "67", priority = 17},
+    {name = "Los Lucky Blocks", priority = 17},
+    {name = "Secret Lucky Block", priority = 18},
+    {name = "Admin Lucky Block", priority = 19},
+    {name = "Taco Lucky Block", priority = 20},
+    {name = "67", priority = 21},
 }
 
 local function getPriority(name)
