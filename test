@@ -564,6 +564,7 @@ task.spawn(function()
         end
     end
 end)
+
 task.spawn(function()
 	while task.wait(0.1) do
 		for _, obj in ipairs(workspace:GetChildren()) do
