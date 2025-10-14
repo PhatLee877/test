@@ -569,11 +569,7 @@ task.spawn(function()
     end
 end)
 
-task.spawn(function()
-	local Players = game:GetService("Players")
-	local Workspace = game:GetService("Workspace")
-
-	-- 🔒 Danh sách model được bảo vệ tuyệt đối
+task.spawn(function()	-- 🔒 Danh sách model được bảo vệ tuyệt đối
 	local protectedModels = {
 		["Witch"] = true,
 		["ShopNPCRobuxIdle"] = true,
