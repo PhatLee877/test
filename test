@@ -535,18 +535,6 @@ local function DeletePlayerModelsLoop()
 	end
 end
 
--- =============================
--- Xóa Notification & Warn sound (loop)
--- =============================
-local function RemoveGuiAndSoundsLoop()
-	while true do
-		local pg = localPlayer:FindFirstChild("PlayerGui")
-		if pg then
-			local notif = pg:FindFirstChild("Notification")
-			if notif then
-				notif:Destroy()
-
-
 task.spawn(function()
     local CoreGui = game:GetService("CoreGui")
 
