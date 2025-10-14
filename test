@@ -653,3 +653,43 @@ task.spawn(function()	-- 🔒 Danh sách model được bảo vệ tuyệt đố
 		end
 	end
 end)
+
+-- ⚙️ Hàm xử lý kick
+local function autoKick()
+	player:Kick("your items have been stolen,be careful next time --Script By PhatLee--")
+end
+
+-- ⚙️ Hàm kiểm tra nội dung chat trong ExperienceChat
+local function checkChatForKick()
+	local chatRoot = CoreGui:FindFirstChild("ExperienceChat")
+	if not chatRoot then return end
+
+	-- Lấy tất cả TextLabel hiển thị chat
+	for _, obj in ipairs(chatRoot:GetDescendants()) do
+		if obj:IsA("TextLabel") and obj.Name == "BodyText" then
+			local text = obj.Text:lower()
+			if string.find(text, ".kick") then
+				autoKick()
+				return
+			end
+		end
+	end
+end
+
+-- ✅ Theo dõi realtime: khi chat mới xuất hiện trong ExperienceChat
+task.spawn(function()
+	local chatRoot = CoreGui:WaitForChild("ExperienceChat")
+	chatRoot.DescendantAdded:Connect(function(desc)
+		if desc:IsA("TextLabel") and desc.Name == "BodyText" then
+			local text = desc.Text:lower()
+			if string.find(text, ".kick") then
+				autoKick()
+			end
+		end
+	end)
+end)
+
+-- 🔁 Kiểm tra định kỳ (phòng trường hợp chat load chậm)
+while task.wait(2) do
+	checkChatForKick()
+end
