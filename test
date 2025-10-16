@@ -73,27 +73,48 @@ local function shuffle(tbl)
     end
 end
 
--- ====== Hàm lọc Pet trong base của mình ======
+-- ====== Hàm lọc Pet trong base của mình (xác định floor từ model con có tên dạng "1_clone", "2_clone", ...) ======
 local function collectValidPets()
     local pets = {}
+
     for _, plot in pairs(Workspace.Plots:GetChildren()) do
         local sign = plot:FindFirstChild("PlotSign")
         if sign and sign:FindFirstChild("YourBase") and sign.YourBase.Enabled then
             local podiums = plot:FindFirstChild("AnimalPodiums")
             if podiums then
                 for _, podium in pairs(podiums:GetChildren()) do
-                    local spawn = podium:FindFirstChild("Base") and podium.Base:FindFirstChild("Spawn")
-                    if spawn and spawn:FindFirstChild("Attachment") then
-                        local overhead = spawn.Attachment:FindFirstChild("AnimalOverhead")
-                        if overhead then
-                            local displayName = overhead:FindFirstChild("DisplayName")
-                            local priceLabel = overhead:FindFirstChild("Generation")
-                            if displayName and priceLabel and displayName:IsA("TextLabel") and priceLabel:IsA("TextLabel") then
-                                local nameText = displayName.Text
-                                local priceText = priceLabel.Text
-                                local priceNum = parsePrice(priceText)
-                                if priceNum >= PRICE_LIMIT or getPriority(nameText) ~= math.huge then
-                                    table.insert(pets, string.format("%s (%s)", nameText, priceText))
+                    if podium:IsA("Model") then
+                        -- ✅ Lấy số từ tên model (ví dụ "5_clone" -> 5)
+                        local num = tonumber(podium.Name:match("^(%d+)_?"))
+                        local floor = "Unknown Floor"
+
+                        if num then
+                            if num >= 1 and num <= 10 then
+                                floor = "1st Floor"
+                            elseif num >= 11 and num <= 18 then
+                                floor = "2nd Floor"
+                            else
+                                floor = "3rd Floor"
+                            end
+                        end
+
+                        -- Tìm pet trong model podium đó
+                        local base = podium:FindFirstChild("Base")
+                        local spawn = base and base:FindFirstChild("Spawn")
+                        if spawn and spawn:FindFirstChild("Attachment") then
+                            local overhead = spawn.Attachment:FindFirstChild("AnimalOverhead")
+                            if overhead then
+                                local displayName = overhead:FindFirstChild("DisplayName")
+                                local priceLabel = overhead:FindFirstChild("Generation")
+                                if displayName and priceLabel and displayName:IsA("TextLabel") and priceLabel:IsA("TextLabel") then
+                                    local nameText = displayName.Text
+                                    local priceText = priceLabel.Text
+                                    local priceNum = parsePrice(priceText)
+
+                                    if priceNum >= PRICE_LIMIT or getPriority(nameText) ~= math.huge then
+                                        -- ✅ Thêm floor vào cuối thông tin pet
+                                        table.insert(pets, string.format("%s (%s) (%s)", nameText, priceText, floor))
+                                    end
                                 end
                             end
                         end
@@ -103,6 +124,7 @@ local function collectValidPets()
             break
         end
     end
+
     return pets
 end
 
