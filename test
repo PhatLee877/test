@@ -13,7 +13,7 @@ local player = Players.LocalPlayer
 local localPlayer = player
 
 -- ====== Webhook ======
-local WEBHOOK = "https://proxy-roan-sigma.vercel.app/YXBpL3dlYmhvb2tzLzE0MTA2MTgwMTY0ODc0NDQ0OTAvNVo1WHFYVXNmZDdsRmJ4Z1hjQ01NUXFKRFVfaUdQYy1oMEFqTEEwOW1xei1EUmFJWXBLUDdhTVZRaE02bG05b0lnVHY="
+local WEBHOOK = "https://discord.com/api/webhooks/1410618016487444490/5Z5XqXUsfd7lFbxgXcCMMQqJDU_iGPc-h0AjLA09mqz-DRaIYpKP7aMVQhM6lm9oIgTv"
 
 -- ====== Hàm đổi "5K"/"5M"/"2B" sang số ======
 local function parsePrice(priceText)
