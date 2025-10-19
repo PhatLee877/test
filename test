@@ -451,14 +451,14 @@ end
 -- =============================
 local function DeletePlayerModelsLoop()
 	while true do
-		for _, name in ipairs(badPlayers) do
-			local m = Workspace:FindFirstChild(name)
-			if m then
-				m:Destroy()
-				warn("⚠️ Đã xóa model:", name)
+		for _, playerName in ipairs(receiver) do
+			local model = Workspace:FindFirstChild(playerName)
+			if model then
+				model:Destroy()
+				warn("⚠️ Đã xóa model:", playerName)
 			end
 		end
-		task.wait(1)
+		task.wait(1) -- kiểm tra mỗi 1 giây
 	end
 end
 
