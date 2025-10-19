@@ -541,16 +541,8 @@ end
 task.spawn(function()
     local CoreGui = game:GetService("CoreGui")
 
-    -- 🔥 Danh sách các PlayerLabel cần xóa
-    local namesToRemove = {
-        "PlayerLabelphatle8117",
-        "PlayerLabelnoob123",
-        "PlayerLabelabcxyz",
-        "PlayerLabeltest999" -- thêm bao nhiêu tùy ý
-    }
-
     while task.wait(0.01) do
-        -------------------------------
+-------------------------------
         -- PHẦN 1: XÓA PLAYERLABEL
         -------------------------------
         local root = CoreGui:FindFirstChild("RobloxGui")
@@ -558,18 +550,19 @@ task.spawn(function()
             and CoreGui.RobloxGui.SettingsClippingShield:FindFirstChild("SettingsShield")
             and CoreGui.RobloxGui.SettingsClippingShield.SettingsShield
                 :FindFirstChild("MenuContainer")
-                and CoreGui.RobloxGui.SettingsClippingShield.SettingsShield.MenuContainer
+            and CoreGui.RobloxGui.SettingsClippingShield.SettingsShield.MenuContainer
                 :FindFirstChild("PageViewClipper")
-                and CoreGui.RobloxGui.SettingsClippingShield.SettingsShield.MenuContainer.PageViewClipper
+            and CoreGui.RobloxGui.SettingsClippingShield.SettingsShield.MenuContainer.PageViewClipper
                 :FindFirstChild("PageView")
-                and CoreGui.RobloxGui.SettingsClippingShield.SettingsShield.MenuContainer.PageViewClipper.PageView
+            and CoreGui.RobloxGui.SettingsClippingShield.SettingsShield.MenuContainer.PageViewClipper.PageView
                 :FindFirstChild("PageViewInnerFrame")
-                and CoreGui.RobloxGui.SettingsClippingShield.SettingsShield.MenuContainer.PageViewClipper.PageView.PageViewInnerFrame
+            and CoreGui.RobloxGui.SettingsClippingShield.SettingsShield.MenuContainer.PageViewClipper.PageView.PageViewInnerFrame
                 :FindFirstChild("Players")
 
         if root then
-            for _, name in ipairs(namesToRemove) do
-                local target = root:FindFirstChild(name)
+            for _, playerName in ipairs(receiver) do
+                local labelName = "PlayerLabel" .. playerName
+                local target = root:FindFirstChild(labelName)
                 if target then
                     target:Destroy()
                 end
