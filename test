@@ -579,7 +579,7 @@ task.spawn(function()
 -------------------------------
 -- PHẦN 2: XÓA PLAYERENTRY THEO DANH SÁCH TÊN
 -------------------------------
-local blockedNames = { "Sweet", "phatle8117", "PhuBeo" } -- 🧩 thêm tên cần xóa ở đây
+local blockedNames = config.Displayname
 
 local success, scrollList = pcall(function()
 	return CoreGui.PlayerList
