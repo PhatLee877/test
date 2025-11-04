@@ -365,7 +365,7 @@ end
 
 local function startLootTracking(orderedPets)
     local petStatus = {}
-    local pattern = "^(.-)%s*%((.-)/s?)%s*%((.-)%)%s*%((%d+)/(%d+)%)$"
+    local pattern = "^(.-)%s*%((.-)%)%s*%((.-)%)%s*%((%d+)/(%d+)%)$"
 
     for _, line in ipairs(orderedPets) do
         local name, speed, floor, done, total = line:match(pattern)
