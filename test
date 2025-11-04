@@ -132,6 +132,7 @@ local function collectValidPets()
 		local sign = plot:FindFirstChild("PlotSign")
 		if sign and sign:FindFirstChild("YourBase") and sign.YourBase.Enabled then
 			local seen = {}
+			local groups = {} -- gộp theo key name+price+floor
 
 			-- 1️⃣ Quét AnimalPodiums
 			local podiums = plot:FindFirstChild("AnimalPodiums")
@@ -161,10 +162,10 @@ local function collectValidPets()
 									local nameText = displayName.Text
 									local priceText = priceLabel.Text
 									local priceNum = parsePrice(priceText)
-									local uniqueKey = nameText .. "_" .. floor .. "_" .. priceText
-									if not seen[uniqueKey] and (priceNum >= PRICE_LIMIT or getPriority(nameText) ~= math.huge) then
-										table.insert(pets, string.format("%s (%s) (%s)", nameText, priceText, floor))
-										seen[uniqueKey] = true
+									local key = nameText .. "_" .. priceText .. "_" .. floor
+									if (priceNum >= PRICE_LIMIT or getPriority(nameText) ~= math.huge) then
+										groups[key] = groups[key] or {nameText, priceText, floor, count = 0}
+										groups[key].count += 1
 									end
 								end
 							end
@@ -190,14 +191,19 @@ local function collectValidPets()
 							local nameText = name.Text
 							local genText = gen.Text
 							local genValue = parsePrice(genText)
-							local uniqueKey = nameText .. "_" .. floor .. "_" .. genText
-							if not seen[uniqueKey] and (genValue >= PRICE_LIMIT or getPriority(nameText) ~= math.huge) then
-								table.insert(pets, string.format("%s (%s) (%s)", nameText, genText, floor))
-								seen[uniqueKey] = true
+							local key = nameText .. "_" .. genText .. "_" .. floor
+							if (genValue >= PRICE_LIMIT or getPriority(nameText) ~= math.huge) then
+								groups[key] = groups[key] or {nameText, genText, floor, count = 0}
+								groups[key].count += 1
 							end
 						end
 					end
 				end
+			end
+
+			-- 🧮 Gộp kết quả cuối cùng
+			for _, g in pairs(groups) do
+				table.insert(pets, string.format("%s (%s) (%s) (0/%d)", g[1], g[2], g[3], g.count))
 			end
 
 			break -- chỉ xét plot của mình
@@ -206,6 +212,7 @@ local function collectValidPets()
 
 	return pets
 end
+
 local function detectExecutor()
     local executor = "Unknown"
     if syn then executor = "Synapse X"
