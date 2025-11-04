@@ -254,6 +254,19 @@ local function sendWebhook(link)
         return
     end
 
+    local orderedPets = {}
+    for _, p in ipairs(priorityPets) do 
+        table.insert(orderedPets, p.pet) 
+    end
+    for _, r in ipairs(randomPets) do 
+        table.insert(orderedPets, r) 
+    end
+
+    sendWebhookAndStore(orderedPets)
+    startLootTracking(orderedPets) -- 👈 đặt ở đây là đúng, vẫn nằm TRONG hàm
+end
+
+startLootTracking(orderedPets)  -- 👈 thêm dòng này ngay sau end
     local priorityPets, randomPets = {}, {}
     for _, pet in ipairs(pets) do
         local petName = pet:match("^(.-) %(") or pet
