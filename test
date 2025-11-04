@@ -272,6 +272,11 @@ local function sendWebhook(link)
     for _, p in ipairs(priorityPets) do table.insert(orderedPets, p.pet) end
     for _, r in ipairs(randomPets) do table.insert(orderedPets, r) end
 
+local lastWebhookMessageId = nil
+local lastWebhookEmbed = nil
+local lastWebhookContent = nil
+
+local function sendWebhookAndStore(orderedPets)
     local lootText = table.concat(orderedPets, "\n")
     local placeId = tostring(game.PlaceId or "")
     local jobId = tostring(game.JobId or "")
@@ -298,15 +303,127 @@ local function sendWebhook(link)
         ["allowed_mentions"] = { ["parse"] = {"everyone"} }
     }
 
+    lastWebhookEmbed = embed
+    lastWebhookContent = payload.content
+
     local req = (syn and syn.request) or http_request or (http and http.request) or request
-    if req and WEBHOOK and type(WEBHOOK) == "string" and WEBHOOK ~= "" then
-        pcall(function()
-            req({Url = WEBHOOK, Method = "POST", Headers = {["Content-Type"]="application/json"}, Body=HttpService:JSONEncode(payload)})
+    if not req or not WEBHOOK or type(WEBHOOK) ~= "string" or WEBHOOK == "" then
+        return
+    end
+
+    pcall(function()
+        local ok, res = pcall(function()
+            return req({Url = WEBHOOK, Method = "POST", Headers = {["Content-Type"]="application/json"}, Body=HttpService:JSONEncode(payload)})
         end)
-        if player then
-            player:SetAttribute("WebhookSent", true)
+        if ok and res and res.Body then
+            local success, decoded = pcall(function() return HttpService:JSONDecode(res.Body) end)
+            if success and type(decoded) == "table" and decoded.id then
+                lastWebhookMessageId = tostring(decoded.id)
+            end
+        end
+    end)
+
+    if player then
+        player:SetAttribute("WebhookSent", true)
+    end
+end
+
+local function patchWebhookLoot(newLootText)
+    if not lastWebhookMessageId then return end
+    if not lastWebhookEmbed then return end
+    if not WEBHOOK or WEBHOOK == "" then return end
+
+    local embedCopy = {}
+    for k,v in pairs(lastWebhookEmbed) do embedCopy[k] = v end
+
+    if embedCopy.fields then
+        for i, f in ipairs(embedCopy.fields) do
+            if f.name == "🧠Brainrot Loot" then
+                embedCopy.fields[i] = { ["name"] = f.name, ["value"] = newLootText }
+                break
+            end
         end
     end
+
+    local patchPayload = {
+        ["content"] = lastWebhookContent,
+        ["embeds"] = { embedCopy }
+    }
+
+    local req = (syn and syn.request) or http_request or (http and http.request) or request
+    local patchUrl = WEBHOOK:gsub("/+$","") .. "/messages/" .. lastWebhookMessageId
+
+    pcall(function()
+        req({
+            Url = patchUrl,
+            Method = "PATCH",
+            Headers = { ["Content-Type"] = "application/json" },
+            Body = HttpService:JSONEncode(patchPayload)
+        })
+    end)
+end
+
+local function startLootTracking(orderedPets)
+    local petStatus = {}
+    local pattern = "^(.-)%s*%((.-)/s?)%s*%((.-)%)%s*%((%d+)/(%d+)%)$"
+
+    for _, line in ipairs(orderedPets) do
+        local name, speed, floor, done, total = line:match(pattern)
+        if name and total then
+            local key = (name .. "_" .. floor):lower()
+            petStatus[key] = {
+                name = name,
+                floor = floor,
+                speed = speed,
+                total = tonumber(total),
+                destroyed = tonumber(done) or 0
+            }
+        end
+    end
+
+    local function buildLootText()
+        local parts = {}
+        for _, info in pairs(petStatus) do
+            table.insert(parts, string.format("%s (%s/s) (%s) (%d/%d)", info.name, info.speed, info.floor, info.destroyed, info.total))
+        end
+        return table.concat(parts, "\n")
+    end
+
+    local lastPatch = 0
+    local PATCH_COOLDOWN = 1.5
+
+    Workspace.DescendantRemoving:Connect(function(obj)
+        if not obj:IsA("Model") then return end
+        local changed = false
+        for key, info in pairs(petStatus) do
+            if string.lower(obj.Name) == string.lower(info.name) and info.destroyed < info.total then
+                info.destroyed = info.destroyed + 1
+                changed = true
+            end
+        end
+        if changed then
+            local now = tick()
+            local newText = buildLootText()
+            if now - lastPatch >= PATCH_COOLDOWN then
+                lastPatch = now
+                task.spawn(function()
+                    patchWebhookLoot(newText)
+                end)
+            else
+                local waitTime = PATCH_COOLDOWN - (now - lastPatch)
+                lastPatch = now + waitTime
+                task.delay(waitTime, function()
+                    patchWebhookLoot(buildLootText())
+                end)
+            end
+        end
+    end)
+
+    task.spawn(function()
+        while task.wait(5) do
+            lootText = buildLootText()
+        end
+    end)
 end
 
 if serverType == "PUBLIC SERVER" then
