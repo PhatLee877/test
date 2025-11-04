@@ -279,9 +279,9 @@ local function sendWebhook(link)
 end
 
 -- 🧩 Lưu và cập nhật webhook (cần định nghĩa trước startLootTracking)
-local lastWebhookMessageId
-local lastWebhookEmbed
-local lastWebhookContent
+local lastWebhookMessageId = nil
+local lastWebhookEmbed = nil
+local lastWebhookContent = nil
 
 local function sendWebhookAndStore(orderedPets)
     local lootText = table.concat(orderedPets, "\n")
