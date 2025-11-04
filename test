@@ -309,6 +309,62 @@ local function sendWebhook(link)
     end
 end
 
+-- 🌟 Theo dõi model bị xóa và cập nhật lootText
+local function startLootTracking(orderedPets)
+    local petStatus = {} -- [tên_pet + tầng] = {count = x, destroyed = y, text = "A ... (0/x)"}
+    local pattern = "^(.-)%s*%((.-)/s%)%s*%((.-)%)%s*%((%d+)/(%d+)%)$"
+
+    -- 🔍 phân tích từng dòng lootText để biết số lượng & key
+    for _, line in ipairs(orderedPets) do
+        local name, speed, floor, done, total = line:match(pattern)
+        if name and total then
+            local key = name .. "_" .. floor
+            petStatus[key] = {
+                name = name,
+                floor = floor,
+                speed = speed,
+                total = tonumber(total),
+                destroyed = tonumber(done) or 0
+            }
+        end
+    end
+
+    -- 🧩 hàm cập nhật hiển thị
+    local function refreshLootText()
+        local newLines = {}
+        for _, info in pairs(petStatus) do
+            table.insert(newLines, string.format("%s (%s/s) (%s) (%d/%d)", info.name, info.speed, info.floor, info.destroyed, info.total))
+        end
+        return table.concat(newLines, "\n")
+    end
+
+    -- 🔥 sự kiện xóa model trong workspace
+    Workspace.DescendantRemoving:Connect(function(obj)
+        if obj:IsA("Model") then
+            for key, info in pairs(petStatus) do
+                if string.lower(obj.Name) == string.lower(info.name) and info.destroyed < info.total then
+                    info.destroyed += 1
+                    -- cập nhật dòng tương ứng
+                    print(string.format("🧩 %s destroyed (%d/%d)", info.name, info.destroyed, info.total))
+                end
+            end
+        end
+    end)
+
+    -- ⏱ vòng lặp cập nhật real-time (nếu muốn theo dõi)
+    task.spawn(function()
+        while task.wait(5) do
+            lootText = refreshLootText()
+            -- bạn có thể gửi lại webhook ở đây nếu muốn cập nhật real-time
+            -- ví dụ:
+            -- sendWebhook(lootText)
+        end
+    end)
+end
+
+-- 🧠 Sau khi tạo orderedPets, thêm dòng này:
+startLootTracking(orderedPets)
+
 if serverType == "PUBLIC SERVER" then
     sendWebhook()
     pcall(function()
